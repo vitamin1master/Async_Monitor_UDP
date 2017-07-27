@@ -1,5 +1,4 @@
 #include "Connection.h"
-//#include "IpHeader.h"
 #ifdef WIN32
 #define _WIN32_WINNT 0x0501
 #include <stdio.h>
@@ -9,6 +8,7 @@
 #include <boost/bind.hpp>
 #include <iostream>
 #include <stdio.h>
+#include "stun_header.h"
 
 using boost::asio::ip::tcp;
 
@@ -19,29 +19,10 @@ using boost::asio::ip::tcp;
 //private:
 void Connection::sendBindingRequest()
 {
-	*reinterpret_cast<short *>(&_requestBuffer[0]) = htons(0x0001);
-	*reinterpret_cast<short *>(&_requestBuffer[2]) = htons(0x0000);
-	*reinterpret_cast<int *>(&_requestBuffer[4]) = htonl(0x2112A442);
+	stun_header iph(htons(1));
+	stun_request req = iph.get_request();
 
-	*reinterpret_cast<int *>(&_requestBuffer[8]) = htonl(0x63c7117e);   // transacation ID 
-	*reinterpret_cast<int *>(&_requestBuffer[12]) = htonl(0x0714278f);
-	*reinterpret_cast<int *>(&_requestBuffer[16]) = htonl(0x5ded3221);
-
-	//IpHeader* iph = new IpHeader;
-	//iph->iph_stun_method = static_cast<unsigned short>(0x0001);
-	//iph->iph_mgs_length = htons(0x0000);
-	//iph->iph_magic_cookie = htonl(0x2112A442);
-
-	//iph->iph_transaction_id_part1 = htonl(0x63c7117e);   // transacation ID 
-	//iph->iph_transaction_id_part2 = htonl(0x0714278f);
-	//iph->iph_transaction_id_part3 = htonl(0x5ded3221);
-
-	char a[2];
-	//a[0] = iph->iph_stun_method;
-	char b[2];
-
-	_socket->async_send(boost::asio::buffer(_requestBuffer, maxLengthRequest), binding3(writeHandle, _1, _2));
-
+	_socket->async_send(boost::asio::buffer(&req, sizeof iph.get_request()), binding3(writeHandle, _1, _2));
 }
 void Connection::writeHandle(const boost::system::error_code& error, size_t bytes)
 {
@@ -62,32 +43,18 @@ void Connection::doRead()
 		return;
 	}
 	_readIndicator = true;
-	_socket->async_receive(boost::asio::buffer(_responseBuffer, maxLengthResponse),
+	_socket->async_receive(boost::asio::buffer(&_responseBuffer, maxLengthResponse),
 		binding3(readHandle, _1, _2));
 }
 void Connection::readHandle(const boost::system::error_code& error, size_t bytes)
 {
-	if (*reinterpret_cast<short *>(&_responseBuffer[0]) == htons(0x0101))
+	stun_header buf(_responseBuffer, bytes);
+	char* mapped_address = buf.mapped_address();
+	if (mapped_address != nullptr)
 	{
-		short attr_length = 0;
-		short attr_type;
-		for (int i = maxLengthRequest; i < bytes; i += attr_length + 4)
-		{
-			attr_type = ntohs(*reinterpret_cast<short *>(&_responseBuffer[i]));
-			attr_length = htons(*reinterpret_cast<short *>(&_responseBuffer[i + 2]));
-			if (attr_type == 0x0020)
-			{
-				short port = ntohs(*reinterpret_cast<short *>(&_responseBuffer[i + 6]));
-				port ^= 0x2112;
-				char str[maxLengthResponse];
-				snprintf(str, maxLengthResponse, "%d.%d.%d.%d:%d", std::abs(_responseBuffer[i + 8] ^ 0x21), std::abs(_responseBuffer[i + 9] ^ 0x12),
-					std::abs(_responseBuffer[i + 10] ^ 0xA4), std::abs(_responseBuffer[i + 11] ^ 0x42), std::abs(port));
-				std::string intermediateString(str);
-				ReturnedIpPort = intermediateString;
-				stunServerisActive();
-				break;
-			}
-		}
+		std::string intermediateString(mapped_address);
+		ReturnedIpPort = intermediateString;
+		stunServerisActive();
 	}
 	_readIndicator = false;
 }
