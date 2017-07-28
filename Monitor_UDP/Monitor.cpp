@@ -33,33 +33,24 @@ void Monitor::initializationComponents()
 	_io_service->stop();
 	_io_service->reset();
 
-	for(auto it = _connectionsList.begin(); it != _connectionsList.end(); *it++)
-	{
-		it->reset();
-	}
+	//for(auto it = _connectionsList.begin(); it != _connectionsList.end(); *it++)
+	//{
+	//	it->reset();
+	//}
 
 	_connectionsList.clear();
 	_servers_ports_list.clear();
 
-	_resolver.reset();
-	std::shared_ptr<tcp::resolver> res_ptr(new tcp::resolver(*_io_service));
-	_resolver.swap(res_ptr);
 
-	_request.reset();
-	boost::shared_ptr<boost::asio::streambuf> req_ptr(new boost::asio::streambuf());
-	_request.swap(req_ptr);
+	_resolver.reset(new tcp::resolver(*_io_service));
 
-	_response.reset();
-	std::shared_ptr<boost::asio::streambuf> resp_ptr(new boost::asio::streambuf());
-	_response.swap(resp_ptr);
+	_request.reset(new boost::asio::streambuf());
 
-	_socket.reset();
-	std::shared_ptr < tcp::socket > sock_ptr(new tcp::socket(*_io_service));
-	_socket.swap(sock_ptr);
+	_response.reset(new boost::asio::streambuf());
 
-	_timer.reset();
-	std::shared_ptr < boost::asio::deadline_timer > time_ptr(new boost::asio::deadline_timer(*_io_service));
-	_timer.swap(time_ptr);
+	_socket.reset(new tcp::socket(*_io_service));
+
+	_timer.reset(new boost::asio::deadline_timer(*_io_service));
 }
 
 void Monitor::listingServersAndPorts(boost::property_tree::ptree const& ptree)
@@ -325,18 +316,12 @@ void Monitor::StartMonitoring()
 }
 Monitor::~Monitor()
 {
-	for (auto it = _connectionsList.begin(); it != _connectionsList.end(); *it++)
-	{
-		it->reset();
-		it->reset();
-	}
+	//for (auto it = _connectionsList.begin(); it != _connectionsList.end(); *it++)
+	//{
+	//	it->reset();
+	//	it->reset();
+	//}
 
 	_connectionsList.clear();
 	_servers_ports_list.clear();
-	_resolver.reset();
-	_socket.reset();
-	_timer.reset();
-	_request.reset();
-	_response.reset();
-	_io_service.reset();
 }

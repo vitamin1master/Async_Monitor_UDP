@@ -145,8 +145,7 @@ std::shared_ptr<udp::socket> Connection::Socket()
 
 Connection::Connection(boost::asio::io_service& io_service, int indexConnection, std::string serverId, int serverPort)
 {
-	std::shared_ptr< udp::socket> soc_ptr(new udp::socket(io_service));
-	_socket.swap(soc_ptr);
+	_socket.reset(new udp::socket(io_service));
 
 	IndexConnection = indexConnection;
 	StopIndicator = false;
@@ -156,8 +155,7 @@ Connection::Connection(boost::asio::io_service& io_service, int indexConnection,
 	StunServerIsActive = false;
 	ReturnedIpPort = "";
 
-	std::shared_ptr<boost::asio::deadline_timer> time_ptr(new boost::asio::deadline_timer(io_service));
-	_timer.swap(time_ptr);
+	_timer.reset(new boost::asio::deadline_timer(io_service));
 
 	_countSendRequest = 0;
 }
@@ -173,6 +171,4 @@ void Connection::Connect()
 
 Connection::~Connection()
 {
-	_socket.reset();
-	_timer.reset();
 }
