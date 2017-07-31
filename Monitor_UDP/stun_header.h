@@ -1,5 +1,6 @@
 #pragma once
 #include <stdint.h>
+#include <boost/asio.hpp>
 #include "stun_request.h"
 
 class stun_header
@@ -18,6 +19,6 @@ public:
 	uint16_t& get_data_len();
 	uint32_t& get_magic_cookie();
 	uint32_t& get_id(int index);
-	char* data;
+	std::vector<char> data;
 };
 

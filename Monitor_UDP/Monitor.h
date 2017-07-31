@@ -6,27 +6,25 @@
 #endif
 
 #include <boost/property_tree/ptree.hpp>
-#include <boost/property_tree/json_parser.hpp>
 #include <boost/asio.hpp>
 #include <boost/shared_ptr.hpp>
+#include "Declare.h"
 #include "Connection.h"
 using boost::asio::ip::tcp;
 
-
-class Monitor
+class Monitor 
 {
 public:
-	Monitor(std::string addressConfigFile);
+	Monitor(std::string address_config_file);
 	~Monitor();
-	void StartMonitoring();
-
+	void start_monitoring();
+	void stop_connection();
 private:
-	static const int delay = 1000;
 
-	std::string _addressConfigFile;
-	std::string _urlGiveServers;
-	std::string _addressRecordFile;
-	std::string _getCommand;
+	std::string _address_config_file;
+	std::string _url_give_servers;
+	std::string _address_record_file;
+	std::string _get_command;
 
 	std::vector<std::pair<std::string, int>> _servers_ports_list;
 	std::shared_ptr<boost::asio::io_service> _io_service;
@@ -35,20 +33,18 @@ private:
 	boost::shared_ptr<boost::asio::streambuf> _request;
 	std::shared_ptr<boost::asio::streambuf> _response;
 	std::shared_ptr<tcp::resolver> _resolver;
-	std::vector<std::shared_ptr<Connection>> _connectionsList;
-	std::shared_ptr<boost::asio::deadline_timer> _timer;
-	bool parsingConfigFile();
-	//Fill in the lists of servers and ports from json file
-	void listingServersAndPorts(boost::property_tree::ptree const& ptree);
-	//Analysis of monitorin data
-	void verificationResultMonitoring();
+	std::vector<std::shared_ptr<Connection>> _connections_list;
 
-	void stoppedMonitoring(bool success) const;
-	void initializationComponents();
-	//Action after waiting a seconds
-	void waitHandle(const boost::system::error_code error);
+	bool parsing_config_file();
+	//Fill in the lists of servers and ports from json file
+	void listing_servers_and_ports(boost::property_tree::ptree const& ptree);
+	//Analysis of monitorin data
+	void verification_result_monitoring();
+
+	void stop_monitoring(bool success) const;
+	void initialization_components();
 	//Fill in the lists of servers and ports received by URL data
-	bool getAddressMonitoring();
-	void select_getCommand();
+	bool get_address_monitoring();
+	void select_get_command();
 };
 

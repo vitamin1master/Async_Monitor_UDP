@@ -15,8 +15,75 @@ using boost::asio::ip::tcp;
 #define binding2(x,y) boost::bind(&Monitor::x,this,y)
 #define binding3(x,y,z) boost::bind(&Monitor::x,this,y,z)
 
+//public:
+Monitor::Monitor(std::string address_config_file)
+{
+	std::shared_ptr<boost::asio::io_service> service(new boost::asio::io_service());
+	_io_service.swap(service);
+
+	_address_config_file = address_config_file;
+
+	_socket.reset(new tcp::socket(*_io_service));
+
+	_resolver.reset(new tcp::resolver(*_io_service));
+
+	_response.reset(new boost::asio::streambuf());
+
+	_request.reset(new boost::asio::streambuf());
+
+	std::vector<std::shared_ptr<Connection>> con_ptr;
+	_connections_list.swap(con_ptr);
+}
+
+Monitor::~Monitor()
+{
+	_connections_list.clear();
+	_servers_ports_list.clear();
+}
+
+void Monitor::start_monitoring()
+{
+	initialization_components();
+	if (!parsing_config_file())
+	{
+		stop_monitoring(false);
+		return;
+	}
+	std::cout << "Start monitoring" << std::endl;
+	if (!_servers_ports_list.size())
+	{
+		std::cout << "Received an empty list of servers" << std::endl;
+		stop_monitoring(false);
+		return;
+	}
+	for (int i = 0; i < _servers_ports_list.size(); i++)
+	{
+		std::shared_ptr<Connection> newConnection_ptr(new Connection(*_io_service, i, _servers_ports_list[i].first, _servers_ports_list[i].second, this));
+		_connections_list.push_back(newConnection_ptr);
+		newConnection_ptr->Connect();
+	}
+	_io_service->run();
+}
+
+void Monitor::stop_connection()
+{
+	bool allConnectionsStopped = true;
+	for (auto it = _connections_list.begin(); it != _connections_list.end(); *it++)
+	{
+		if (!it->get()->stop_indicator)
+		{
+			allConnectionsStopped = false;
+			break;
+		}
+	}
+	if (allConnectionsStopped)
+	{
+		verification_result_monitoring();
+	}
+}
+
 //private:
-void Monitor::stoppedMonitoring(bool success) const
+void Monitor::stop_monitoring(bool success) const
 {
 	if (success)
 	{
@@ -28,17 +95,11 @@ void Monitor::stoppedMonitoring(bool success) const
 	}
 }
 
-void Monitor::initializationComponents()
+void Monitor::initialization_components()
 {
-	_io_service->stop();
 	_io_service->reset();
 
-	//for(auto it = _connectionsList.begin(); it != _connectionsList.end(); *it++)
-	//{
-	//	it->reset();
-	//}
-
-	_connectionsList.clear();
+	_connections_list.clear();
 	_servers_ports_list.clear();
 
 
@@ -49,11 +110,9 @@ void Monitor::initializationComponents()
 	_response.reset(new boost::asio::streambuf());
 
 	_socket.reset(new tcp::socket(*_io_service));
-
-	_timer.reset(new boost::asio::deadline_timer(*_io_service));
 }
 
-void Monitor::listingServersAndPorts(boost::property_tree::ptree const& ptree)
+void Monitor::listing_servers_and_ports(boost::property_tree::ptree const& ptree)
 {
 	auto it = ptree.begin();
 	auto end = ptree.end();
@@ -66,39 +125,39 @@ void Monitor::listingServersAndPorts(boost::property_tree::ptree const& ptree)
 	}
 }
 
-void Monitor::select_getCommand()
+void Monitor::select_get_command()
 {
-	if (_urlGiveServers == "")
+	if (_url_give_servers == "")
 	{
 		return;
 	}
-	int position = _urlGiveServers.find('/');
+	int position = _url_give_servers.find('/');
 	if (position != std::string::npos)
 	{
-		_getCommand = _urlGiveServers.substr(position);
-		_urlGiveServers.erase(position);
+		_get_command = _url_give_servers.substr(position);
+		_url_give_servers.erase(position);
 	}
 	else
 	{
-		_getCommand = "";
+		_get_command = "";
 	}
 }
 
 
-bool Monitor::parsingConfigFile()
+bool Monitor::parsing_config_file()
 {
 	boost::property_tree::ptree ptree;
 	try
 	{
 		//Read json file
-		std::ifstream jsonFile(_addressConfigFile);
+		std::ifstream jsonFile(_address_config_file);
 		boost::property_tree::read_json(jsonFile, ptree);
 
-		_addressRecordFile = ptree.get<std::string>("captureRecordFile");
-		_urlGiveServers = ptree.get<std::string>("urlResource");
+		_address_record_file = ptree.get<std::string>("captureRecordFile");
+		_url_give_servers = ptree.get<std::string>("urlResource");
 
-		select_getCommand();
-		bool flag = getAddressMonitoring();
+		select_get_command();
+		bool flag = get_address_monitoring();
 		return flag;
 	}
 	catch (std::exception const&e)
@@ -108,114 +167,59 @@ bool Monitor::parsingConfigFile()
 	}
 }
 
-void Monitor::verificationResultMonitoring()
+void Monitor::verification_result_monitoring()
 {
 	//Open json file on write
-	std::ofstream jsonFile(_addressRecordFile);
+	std::ofstream jsonFile(_address_record_file);
 	boost::property_tree::ptree ptree;
 	try
 	{
 		//Record server data
 		boost::property_tree::ptree servers;
 		bool allConnectionsStopped = true;
-		for (auto it = _connectionsList.begin(); it != _connectionsList.end(); *it++)
+		for (auto it = _connections_list.begin(); it != _connections_list.end(); *it++)
 		{
 			boost::property_tree::ptree server;
-			server.put("id", it->get()->ServerId);
-			if (it->get()->StunServerIsActive)
+			server.put("id", it->get()->server_id);
+			if (it->get()->stun_server_is_active)
 			{
 				server.put("IsActive", "Yes");
-				server.put("Response", it->get()->ReturnedIpPort);
+				server.put("Response", it->get()->returned_ip_port);
 			}
 			else
 			{
 				server.put("IsActive", "No");
 			}
-			std::string serverNumber = "Number " + std::to_string(it->get()->IndexConnection);
+			std::string serverNumber = "Number " + std::to_string(it->get()->index_Connection);
 			servers.push_back(std::make_pair("", server));
 		}
 		ptree.add_child("servers", servers);
 		boost::property_tree::write_json(jsonFile, ptree);
-		std::cout << "Record file at " + _addressRecordFile << std::endl;
-		stoppedMonitoring(true);
+		std::cout << "Record file at " + _address_record_file << std::endl;
+		stop_monitoring(true);
 	}
 	catch (std::exception const&e)
 	{
 		std::cout << "Invalid record file: " << std::endl;
-		stoppedMonitoring(false);
-	}
-}
-void Monitor::waitHandle(const boost::system::error_code error)
-{
-	//Check every seconds on stopped monitoring
-	if (error)
-	{
-		return;
-	}
-	bool allConnectionsStopped = true;
-	for (auto it = _connectionsList.begin(); it != _connectionsList.end(); *it++)
-	{
-		if (!it->get()->StopIndicator)
-		{
-			allConnectionsStopped = false;
-			break;
-		}
-	}
-	if (!allConnectionsStopped)
-	{
-		_timer->expires_from_now(boost::posix_time::milliseconds(0));
-		_timer->async_wait(binding2(waitHandle, _1));
-	}
-	else
-	{
-		verificationResultMonitoring();
+		stop_monitoring(false);
 	}
 }
 
-
-//public:
-Monitor::Monitor(std::string addressConfigFile)
-{
-	std::shared_ptr<boost::asio::io_service> service(new boost::asio::io_service());
-	_io_service.swap(service);
-
-	_addressConfigFile = addressConfigFile;
-
-	std::shared_ptr<tcp::socket> soc_ptr(new tcp::socket(*_io_service));
-	_socket.swap(soc_ptr);
-
-	std::shared_ptr<tcp::resolver> res_ptr(new tcp::resolver(*_io_service));
-	_resolver.swap(res_ptr);
-
-	std::shared_ptr<boost::asio::streambuf> resp_ptr(new boost::asio::streambuf());
-	_response.swap(resp_ptr);
-
-	boost::shared_ptr<boost::asio::streambuf> req_ptr(new boost::asio::streambuf());
-	_request.swap(req_ptr);
-
-	std::shared_ptr<boost::asio::deadline_timer> time_ptr(new boost::asio::deadline_timer(*_io_service));
-	_timer.swap(time_ptr);
-
-	std::vector<std::shared_ptr<Connection>> con_ptr;
-	_connectionsList.swap(con_ptr);
-}
-
-bool Monitor::getAddressMonitoring()
+bool Monitor::get_address_monitoring()
 {
 	//Create request
 	if (!_request)
 	{
-		boost::shared_ptr<boost::asio::streambuf> req_ptr(new boost::asio::streambuf());
-		_request.swap(req_ptr);
+		_request.reset(new boost::asio::streambuf());
 	}
 	std::iostream request_stream(_request.get());
-	request_stream << "GET " << _getCommand << " HTTP/1.0\r\n";
-	request_stream << "Host: " << _urlGiveServers << "\r\n";
+	request_stream << "GET " << _get_command << " HTTP/1.0\r\n";
+	request_stream << "Host: " << _url_give_servers << "\r\n";
 	request_stream << "Accept: */*\r\n";
 	request_stream << "Connection: close\r\n\r\n";
 
 	//Connect to server
-	tcp::resolver::query query(_urlGiveServers, "http");
+	tcp::resolver::query query(_url_give_servers, "http");
 	try 
 	{
 		tcp::resolver::iterator it = _resolver->resolve(query);
@@ -278,50 +282,13 @@ bool Monitor::getAddressMonitoring()
 	for(auto &iterator: ptree)
 	{
 		assert(iterator.first.empty());
-		listingServersAndPorts(iterator.second);
+		listing_servers_and_ports(iterator.second);
 	}
 	if(_servers_ports_list.size())
 	{
-		std::cout << "Successfully obtained a servers list from " << _urlGiveServers << _getCommand << std::endl;
+		std::cout << "Successfully obtained a servers list from " << _url_give_servers << _get_command << std::endl;
 		return true;
 	}
 	return false;
 }
 
-void Monitor::StartMonitoring()
-{
-	initializationComponents();
-	if (!parsingConfigFile())
-	{
-		stoppedMonitoring(false);
-		return;
-	}
-	std::cout << "Start monitoring" << std::endl;
-	if (!_servers_ports_list.size())
-	{
-		std::cout << "Received an empty list of servers" << std::endl;
-		stoppedMonitoring(false);
-		return;
-	}
-	for (int i = 0; i < _servers_ports_list.size(); i++)
-	{
-		std::shared_ptr<Connection> newConnection_ptr(new Connection(*_io_service, i, _servers_ports_list[i].first, _servers_ports_list[i].second));
-		_connectionsList.push_back(newConnection_ptr);
-		newConnection_ptr->Connect();
-	}
-	_timer->expires_from_now(boost::posix_time::milliseconds(0));
-	_timer->async_wait(binding2(waitHandle, _1));
-	_io_service->run();
-	_io_service->stop();
-}
-Monitor::~Monitor()
-{
-	//for (auto it = _connectionsList.begin(); it != _connectionsList.end(); *it++)
-	//{
-	//	it->reset();
-	//	it->reset();
-	//}
-
-	_connectionsList.clear();
-	_servers_ports_list.clear();
-}

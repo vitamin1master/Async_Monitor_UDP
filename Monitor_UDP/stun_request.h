@@ -1,5 +1,6 @@
 ﻿#pragma once
-#include<boost/asio.hpp>
+#include <stdint.h>
+
 struct stun_request
 {
 	uint16_t msg_type;

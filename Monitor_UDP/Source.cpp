@@ -5,6 +5,6 @@
 void main()
 {
 	Monitor monitor("config.json");
-	monitor.StartMonitoring();
+	monitor.start_monitoring();
 	getchar();
 }
