@@ -270,12 +270,12 @@ bool Monitor::get_address_monitoring()
 	//Remove superfluous
 	while (std::getline(response_stream, header) && header != "\r");
 	//Write the main part of message in a file
-	std::ofstream record_file("C:\\FilesRecord\\servers.json",std::ofstream::out);
+	std::ofstream record_file("servers.json",std::ofstream::out);
 	record_file << _response;
 	record_file.close();
 	//Read json file and parse him
 	boost::property_tree::ptree ptree;
-	std::ifstream read_file("C:\\FilesRecord\\servers.json");
+	std::ifstream read_file("servers.json");
 	boost::property_tree::json_parser::read_json(read_file, ptree);
 	_servers_ports_list.clear();
 	for(auto &iterator: ptree)
