@@ -8,8 +8,8 @@
 #include <boost/property_tree/ptree.hpp>
 #include <boost/asio.hpp>
 #include <boost/shared_ptr.hpp>
-#include "Declare.h"
 #include "Connection.h"
+#include "connection_info.h"
 using boost::asio::ip::tcp;
 
 class Monitor 
@@ -18,7 +18,6 @@ public:
 	Monitor(std::string address_config_file);
 	~Monitor();
 	void start_monitoring();
-	void stop_connection();
 private:
 
 	std::string _address_config_file;
@@ -34,7 +33,9 @@ private:
 	std::shared_ptr<boost::asio::streambuf> _response;
 	std::shared_ptr<tcp::resolver> _resolver;
 	std::vector<std::shared_ptr<Connection>> _connections_list;
+	std::vector<connection_info> _completed_connections_info_list;
 
+	void stop_connection(std::shared_ptr<Connection> connection);
 	bool parsing_config_file();
 	//Fill in the lists of servers and ports from json file
 	void listing_servers_and_ports(boost::property_tree::ptree const& ptree);

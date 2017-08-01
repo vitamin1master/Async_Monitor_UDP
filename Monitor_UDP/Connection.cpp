@@ -9,19 +9,16 @@
 #include <iostream>
 #include <stdio.h>
 #include "stun_header.h"
+#include <boost/function.hpp>
 
 using boost::asio::ip::tcp;
 
-#define binding1(x) boost::bind(&Connection::x,shared_from_this())
-#define binding2(x,y) boost::bind(&Connection::x,shared_from_this(),y)
-#define binding3(x,y,z) boost::bind(&Connection::x,shared_from_this(),y,z)
-
 //public:
 
-Connection::Connection(boost::asio::io_service& io_service, int indexConnection, std::string serverId, int serverPort, Monitor* monitor)
+Connection::Connection(boost::asio::io_service& io_service, int indexConnection, std::string serverId, int serverPort, boost::function<void(std::shared_ptr<Connection>)> func)
 {
 	_socket.reset(new udp::socket(io_service));
-	_monitor = monitor;
+	_connection_stop_handler = func;
 
 	index_Connection = indexConnection;
 	stop_indicator = false;
@@ -40,14 +37,14 @@ Connection::~Connection()
 {
 }
 
-std::shared_ptr<udp::socket> Connection::Socket()
+std::shared_ptr<udp::socket> Connection::socket()
 {
 	return _socket;
 }
 
 //private:
 
-void Connection::Connect()
+void Connection::connect()
 {
 	char* server = new char[server_id.length() + 1];
 	snprintf(server, server_id.length() + 1, server_id.c_str());
@@ -116,14 +113,11 @@ void Connection::stun_server_isActive()
 	stop_indicator = true;
 	stun_server_is_active = true;
 	std::cout << server_id << " is active" << std::endl;
+	_connection_stop_handler(shared_from_this());
 }
 void Connection::wait_handle(const boost::system::error_code error)
 {
 	if (error)
-	{
-		_monitor->stop_connection();
-	}
-	if (stun_server_is_active)
 	{
 		return;
 	}
@@ -151,7 +145,7 @@ void Connection::wait_handle(const boost::system::error_code error)
 			}
 			_timer->cancel();
 			std::cout << "CLose connection" << std::endl;
-			_monitor->stop_connection();
+			_connection_stop_handler(shared_from_this());
 		}
 	}
 	else
@@ -160,7 +154,7 @@ void Connection::wait_handle(const boost::system::error_code error)
 		stop_indicator = true;
 		std::cout << server_id << " does not respond" << std::endl;
 		std::cout << "CLose connection" << std::endl;
-		_monitor->stop_connection();
+		_connection_stop_handler(shared_from_this());
 	}
 }
 void Connection::connect_handle(const boost::system::error_code error)

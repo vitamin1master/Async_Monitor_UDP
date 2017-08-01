@@ -8,6 +8,8 @@
 #include <boost/property_tree/json_parser.hpp>
 #include <boost/foreach.hpp>
 #include <boost/bind.hpp>
+#include <boost/function.hpp>
+#include <boost/make_shared.hpp>
 #include <iostream>
 using boost::asio::ip::tcp;
 
@@ -25,14 +27,13 @@ Monitor::Monitor(std::string address_config_file)
 
 	_socket.reset(new tcp::socket(*_io_service));
 
+	//tcp::resolver new_resolver(*_io_service);
+	//_resolver=std::make_shared<tcp::resolver>(new_resolver);
 	_resolver.reset(new tcp::resolver(*_io_service));
 
 	_response.reset(new boost::asio::streambuf());
 
 	_request.reset(new boost::asio::streambuf());
-
-	std::vector<std::shared_ptr<Connection>> con_ptr;
-	_connections_list.swap(con_ptr);
 }
 
 Monitor::~Monitor()
@@ -58,25 +59,22 @@ void Monitor::start_monitoring()
 	}
 	for (int i = 0; i < _servers_ports_list.size(); i++)
 	{
-		std::shared_ptr<Connection> newConnection_ptr(new Connection(*_io_service, i, _servers_ports_list[i].first, _servers_ports_list[i].second, this));
+		boost::function<void(std::shared_ptr<Connection>)> func(boost::bind(&Monitor::stop_connection,this,_1));
+		std::shared_ptr<Connection> newConnection_ptr(new Connection(*_io_service, i, _servers_ports_list[i].first, _servers_ports_list[i].second, func));
 		_connections_list.push_back(newConnection_ptr);
-		newConnection_ptr->Connect();
+		newConnection_ptr->connect();
 	}
 	_io_service->run();
 }
 
-void Monitor::stop_connection()
+void Monitor::stop_connection(std::shared_ptr<Connection> connection)
 {
-	bool allConnectionsStopped = true;
-	for (auto it = _connections_list.begin(); it != _connections_list.end(); *it++)
-	{
-		if (!it->get()->stop_indicator)
-		{
-			allConnectionsStopped = false;
-			break;
-		}
-	}
-	if (allConnectionsStopped)
+	auto iterator =	std::find(_connections_list.begin(), _connections_list.end(), connection);
+	if (iterator != _connections_list.end())
+		_connections_list.erase(iterator);
+	connection_info c_info{ connection->server_id, connection->stun_server_is_active, connection->returned_ip_port, connection->index_Connection };
+	_completed_connections_info_list.push_back(c_info);
+	if (!_connections_list.size())
 	{
 		verification_result_monitoring();
 	}
@@ -100,6 +98,7 @@ void Monitor::initialization_components()
 	_io_service->reset();
 
 	_connections_list.clear();
+	_completed_connections_info_list.clear();
 	_servers_ports_list.clear();
 
 
@@ -177,20 +176,20 @@ void Monitor::verification_result_monitoring()
 		//Record server data
 		boost::property_tree::ptree servers;
 		bool allConnectionsStopped = true;
-		for (auto it = _connections_list.begin(); it != _connections_list.end(); *it++)
+		for (auto it = _completed_connections_info_list.begin(); it != _completed_connections_info_list.end(); *it++)
 		{
 			boost::property_tree::ptree server;
-			server.put("id", it->get()->server_id);
-			if (it->get()->stun_server_is_active)
+			server.put("id", it->server_id);
+			if (it->stun_server_is_active)
 			{
 				server.put("IsActive", "Yes");
-				server.put("Response", it->get()->returned_ip_port);
+				server.put("Response", it->returned_ip_port);
 			}
 			else
 			{
 				server.put("IsActive", "No");
 			}
-			std::string serverNumber = "Number " + std::to_string(it->get()->index_Connection);
+			std::string serverNumber = "Number " + std::to_string(it->index_Connection);
 			servers.push_back(std::make_pair("", server));
 		}
 		ptree.add_child("servers", servers);
