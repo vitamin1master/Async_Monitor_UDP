@@ -8,10 +8,6 @@
 using boost::asio::ip::tcp;
 using boost::asio::ip::udp;
 
-//#define binding1(x) boost::bind(&Connection::x,shared_from_this())
-//#define binding2(x,y) boost::bind(&Connection::x,shared_from_this(),y)
-//#define binding3(x,y,z) boost::bind(&Connection::x,shared_from_this(),y,z)
-
 //public:
 
 Connection::Connection(boost::asio::io_service& io_service, int indexConnection, std::string serverId, int serverPort, boost::function<void(std::shared_ptr<Connection>)> func)
@@ -71,8 +67,7 @@ void Connection::send_binding_request()
 	stun_header iph(htons(1));
 	stun_request req = iph.get_request();
 
-	_socket->async_send(boost::asio::buffer(&req,sizeof iph.get_request()), boost::bind(&Connection::wait_handle, shared_from_this(), _1));
-	//_socket->async_send(boost::asio::buffer(&req, sizeof iph.get_request()), boost::bind(&Connection::wait_handle,shared_from_this(),_1,_2));
+	_socket->async_send(boost::asio::buffer(&req,sizeof iph.get_request()), boost::bind(&Connection::write_handle, shared_from_this(), _1,_2));
 }
 void Connection::write_handle(const boost::system::error_code& error, size_t bytes)
 {

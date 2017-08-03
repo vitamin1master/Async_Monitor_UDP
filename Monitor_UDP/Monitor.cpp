@@ -1,8 +1,3 @@
-#ifdef WIN32
-#define _WIN32_WINNT 0x0501
-#include <stdio.h>
-#endif
-
 #include "Monitor.h"
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
@@ -12,10 +7,6 @@
 #include <boost/make_shared.hpp>
 #include <iostream>
 using boost::asio::ip::tcp;
-
-//#define binding1(x) boost::bind(&Monitor::x,this)
-//#define binding2(x,y) boost::bind(&Monitor::x,this,y)
-//#define binding3(x,y,z) boost::bind(&Monitor::x,this,y,z)
 
 //public:
 Monitor::Monitor(std::string address_config_file)
@@ -27,8 +18,6 @@ Monitor::Monitor(std::string address_config_file)
 
 	_socket.reset(new tcp::socket(*_io_service));
 
-	//tcp::resolver new_resolver(*_io_service);
-	//_resolver=std::make_shared<tcp::resolver>(new_resolver);
 	_resolver.reset(new tcp::resolver(*_io_service));
 
 	_response.reset(new boost::asio::streambuf());
