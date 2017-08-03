@@ -1,10 +1,4 @@
 #include "Connection.h"
-#ifdef WIN32
-#define _WIN32_WINNT 0x0501
-#include <stdio.h>
-#endif
-
-
 #include <boost/bind.hpp>
 #include <iostream>
 #include <stdio.h>
@@ -12,6 +6,11 @@
 #include <boost/function.hpp>
 
 using boost::asio::ip::tcp;
+using boost::asio::ip::udp;
+
+//#define binding1(x) boost::bind(&Connection::x,shared_from_this())
+//#define binding2(x,y) boost::bind(&Connection::x,shared_from_this(),y)
+//#define binding3(x,y,z) boost::bind(&Connection::x,shared_from_this(),y,z)
 
 //public:
 
@@ -64,7 +63,7 @@ void Connection::start_connection()
 		std::cout << e.code() << std::endl;
 	}
 	_timer->expires_from_now(boost::posix_time::milliseconds(_delay));
-	_timer->async_wait(binding2(wait_handle, _1));
+	_timer->async_wait(boost::bind(&Connection::wait_handle,shared_from_this(),_1));
 }
 
 void Connection::send_binding_request()
@@ -72,7 +71,8 @@ void Connection::send_binding_request()
 	stun_header iph(htons(1));
 	stun_request req = iph.get_request();
 
-	_socket->async_send(boost::asio::buffer(&req, sizeof iph.get_request()), binding3(write_handle, _1, _2));
+	_socket->async_send(boost::asio::buffer(&req,sizeof iph.get_request()), boost::bind(&Connection::wait_handle, shared_from_this(), _1));
+	//_socket->async_send(boost::asio::buffer(&req, sizeof iph.get_request()), boost::bind(&Connection::wait_handle,shared_from_this(),_1,_2));
 }
 void Connection::write_handle(const boost::system::error_code& error, size_t bytes)
 {
@@ -93,7 +93,7 @@ void Connection::do_read()
 	}
 	_read_indicator = true;
 	_socket->async_receive(boost::asio::buffer(&_response_buffer, _max_length_response),
-		binding3(read_handle, _1, _2));
+		boost::bind(&Connection::read_handle, shared_from_this(),_1,_2));
 }
 void Connection::read_handle(const boost::system::error_code& error, size_t bytes)
 {
@@ -135,7 +135,7 @@ void Connection::wait_handle(const boost::system::error_code error)
 				std::cout << e.code() << std::endl;
 			}
 			_timer->expires_from_now(boost::posix_time::milliseconds(_delay));
-			_timer->async_wait(binding2(wait_handle, _1));
+			_timer->async_wait(boost::bind(&Connection::wait_handle, shared_from_this(), _1));
 		}
 		else
 		{

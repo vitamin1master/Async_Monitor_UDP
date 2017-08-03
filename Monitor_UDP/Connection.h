@@ -1,21 +1,16 @@
 #pragma once
 
-#ifdef WIN32
-#define _WIN32_WINNT 0x0501
-#include <stdio.h>
-#endif
-
 #include <boost/asio.hpp>
 #include <boost/function.hpp>
+#include <boost/bind.hpp>
+#include <memory>
 
 using boost::asio::ip::tcp;
 using boost::asio::ip::udp;
 
-#define binding1(x) boost::bind(&Connection::x,shared_from_this())
-#define binding2(x,y) boost::bind(&Connection::x,shared_from_this(),y)
-#define binding3(x,y,z) boost::bind(&Connection::x,shared_from_this(),y,z)
 
-class Connection : public std::enable_shared_from_this<Connection>
+class Connection :
+		public std::enable_shared_from_this<Connection>
 {
 public:
 	Connection(boost::asio::io_service& io_service, int indexConnection, std::string serverId, int serverPort, boost::function<void(std::shared_ptr<Connection>)> func);

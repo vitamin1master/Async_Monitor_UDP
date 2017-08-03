@@ -1,15 +1,13 @@
 #pragma once
 
-#ifdef WIN32
-#define _WIN32_WINNT 0x0501
-#include <stdio.h>
-#endif
 
 #include <boost/property_tree/ptree.hpp>
 #include <boost/asio.hpp>
 #include <boost/shared_ptr.hpp>
 #include "Connection.h"
 #include "connection_info.h"
+#include <memory.h>
+#include <stdio.h>
 using boost::asio::ip::tcp;
 
 class Monitor 

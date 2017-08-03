@@ -13,9 +13,9 @@
 #include <iostream>
 using boost::asio::ip::tcp;
 
-#define binding1(x) boost::bind(&Monitor::x,this)
-#define binding2(x,y) boost::bind(&Monitor::x,this,y)
-#define binding3(x,y,z) boost::bind(&Monitor::x,this,y,z)
+//#define binding1(x) boost::bind(&Monitor::x,this)
+//#define binding2(x,y) boost::bind(&Monitor::x,this,y)
+//#define binding3(x,y,z) boost::bind(&Monitor::x,this,y,z)
 
 //public:
 Monitor::Monitor(std::string address_config_file)
