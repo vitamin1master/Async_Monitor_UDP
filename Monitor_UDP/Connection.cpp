@@ -56,7 +56,7 @@ void Connection::start_connection()
 	}
 	catch (std::system_error& e)
 	{
-		std::cout << e.code() << std::endl;
+		//std::cout << e.code() << std::endl;
 	}
 	_timer->expires_from_now(boost::posix_time::milliseconds(_delay));
 	_timer->async_wait(boost::bind(&Connection::wait_handle,shared_from_this(),_1));
@@ -73,7 +73,7 @@ void Connection::write_handle(const boost::system::error_code& error, size_t byt
 {
 	if (error)
 	{
-		std::cout << error.message() << std::endl;
+		//std::cout << error.message() << std::endl;
 		//binding request will be sent again from he wait_handle
 		return;
 	}
@@ -107,7 +107,7 @@ void Connection::stun_server_isActive()
 	_timer->cancel();
 	stop_indicator = true;
 	stun_server_is_active = true;
-	std::cout << server_id << " is active" << std::endl;
+	//std::cout << server_id << " is active" << std::endl;
 	_connection_stop_handler(shared_from_this());
 }
 void Connection::wait_handle(const boost::system::error_code error)
@@ -127,7 +127,7 @@ void Connection::wait_handle(const boost::system::error_code error)
 			}
 			catch (std::system_error& e)
 			{
-				std::cout << e.code() << std::endl;
+				//std::cout << e.code() << std::endl;
 			}
 			_timer->expires_from_now(boost::posix_time::milliseconds(_delay));
 			_timer->async_wait(boost::bind(&Connection::wait_handle, shared_from_this(), _1));
@@ -139,7 +139,7 @@ void Connection::wait_handle(const boost::system::error_code error)
 				returned_ip_port = "Invalid response";
 			}
 			_timer->cancel();
-			std::cout << "CLose connection" << std::endl;
+			//std::cout << "CLose connection" << std::endl;
 			_connection_stop_handler(shared_from_this());
 		}
 	}
@@ -147,8 +147,8 @@ void Connection::wait_handle(const boost::system::error_code error)
 	{
 		_timer->cancel();
 		stop_indicator = true;
-		std::cout << server_id << " does not respond" << std::endl;
-		std::cout << "CLose connection" << std::endl;
+		//std::cout << server_id << " does not respond" << std::endl;
+		//std::cout << "CLose connection" << std::endl;
 		_connection_stop_handler(shared_from_this());
 	}
 }
@@ -156,7 +156,7 @@ void Connection::connect_handle(const boost::system::error_code error)
 {
 	if (error)
 	{
-		std::cout << "Error" << std::endl;
+		//std::cout << "Error" << std::endl;
 		return;
 	}
 	start_connection();

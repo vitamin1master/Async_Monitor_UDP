@@ -39,10 +39,10 @@ void Monitor::start_monitoring()
 		stop_monitoring(false);
 		return;
 	}
-	std::cout << "Start monitoring" << std::endl;
+	//std::cout << "Start monitoring" << std::endl;
 	if (!_servers_ports_list.size())
 	{
-		std::cout << "Received an empty list of servers" << std::endl;
+		//std::cout << "Received an empty list of servers" << std::endl;
 		stop_monitoring(false);
 		return;
 	}
@@ -74,11 +74,11 @@ void Monitor::stop_monitoring(bool success) const
 {
 	if (success)
 	{
-		std::cout << "Monitoring was success" << std::endl;
+		//std::cout << "Monitoring was success" << std::endl;
 	}
 	else
 	{
-		std::cout << "Monitoring was unsuccessful" << std::endl;
+		//std::cout << "Monitoring was unsuccessful" << std::endl;
 	}
 }
 
@@ -150,7 +150,7 @@ bool Monitor::parsing_config_file()
 	}
 	catch (std::exception const&e)
 	{
-		std::cout << "Invalid config" << std::endl;
+		//std::cout << "Invalid config" << std::endl;
 		return false;
 	}
 }
@@ -183,12 +183,12 @@ void Monitor::verification_result_monitoring()
 		}
 		ptree.add_child("servers", servers);
 		boost::property_tree::write_json(jsonFile, ptree);
-		std::cout << "Record file at " + _address_record_file << std::endl;
+		//std::cout << "Record file at " + _address_record_file << std::endl;
 		stop_monitoring(true);
 	}
 	catch (std::exception const&e)
 	{
-		std::cout << "Invalid record file: " << std::endl;
+		//std::cout << "Invalid record file: " << std::endl;
 		stop_monitoring(false);
 	}
 }
@@ -222,7 +222,7 @@ bool Monitor::get_address_monitoring()
 	}
 	catch (std::exception const&e)
 	{
-		std::cout << "Invalid URL or connections problems occurred" << std::endl;
+		//std::cout << "Invalid URL or connections problems occurred" << std::endl;
 		return false;
 	}
 
@@ -233,7 +233,7 @@ bool Monitor::get_address_monitoring()
 	}
 	catch (std::exception const&e)
 	{
-		std::cout << "Error sending request" << std::endl;
+		//std::cout << "Error sending request" << std::endl;
 		return false;
 	}
 	boost::asio::read_until(*_socket, *_response, '\n');
@@ -250,7 +250,7 @@ bool Monitor::get_address_monitoring()
 	//Check the correctness of the response
 	if (!response_stream&&http_version.substr(0, 5) != "HTTP")
 	{
-		std::cout << "Invalid response" << std::endl;
+		//std::cout << "Invalid response" << std::endl;
 		return false;
 	}
 	boost::asio::read_until(*_socket, *_response, '\r\n\r\n');
@@ -274,7 +274,7 @@ bool Monitor::get_address_monitoring()
 	}
 	if(_servers_ports_list.size())
 	{
-		std::cout << "Successfully obtained a servers list from " << _url_give_servers << _get_command << std::endl;
+		//std::cout << "Successfully obtained a servers list from " << _url_give_servers << _get_command << std::endl;
 		return true;
 	}
 	return false;
