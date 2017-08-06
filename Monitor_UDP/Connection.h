@@ -4,6 +4,8 @@
 #include <boost/function.hpp>
 #include <boost/bind.hpp>
 #include <memory>
+#include "stun_response.h"
+#include "stun_request.h"
 
 using boost::asio::ip::tcp;
 using boost::asio::ip::udp;
@@ -42,12 +44,11 @@ private:
 	void connect_handle(const boost::system::error_code error);
 
 	static const int _max_length_response = 128;
-	static const int _max_length_request = 20;
 	static const int _delay = 1000;
 	static const int _max_count_send_request = 15;
 	std::shared_ptr<udp::socket> _socket;
-	unsigned char _request_buffer[_max_length_request];
 	char _response_buffer[_max_length_response];
+	stun_request _request_struct;
 	bool _read_indicator;
 	std::shared_ptr<boost::asio::deadline_timer> _timer;
 	int _count_send_request;
