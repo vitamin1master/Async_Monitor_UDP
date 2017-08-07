@@ -35,7 +35,7 @@ bool parsing_config::parsing_config_file()
 		address_record_file = root["captureRecordFile"].asString();
 		url_give_servers = root["urlResource"].asString();
 	}
-	catch (std::exception const&e)
+	catch (...)
 	{
 		//std::cout << "Invalid config file: " << std::endl;
 		return false;

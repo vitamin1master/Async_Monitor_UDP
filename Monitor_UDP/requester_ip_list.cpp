@@ -16,7 +16,7 @@ requester_ip_list::requester_ip_list(const parsing_config& parsing) :config(pars
 	{
 		request_successful = get_addresses_monitoring();
 	}
-	catch(std::system_error e)
+	catch(...)
 	{
 		exit(1);
 	}
@@ -62,7 +62,7 @@ bool requester_ip_list::get_addresses_monitoring()
 			*it++;
 		}
 	}
-	catch (std::exception const&e)
+	catch (...)
 	{
 		//std::cout << "Invalid URL or connections problems occurred" << std::endl;
 		return false;
@@ -73,7 +73,7 @@ bool requester_ip_list::get_addresses_monitoring()
 	{
 		boost::asio::write(_socket, _request);
 	}
-	catch (std::exception const&e)
+	catch (...)
 	{
 		//std::cout << "Error sending request" << std::endl;
 		return false;

@@ -22,7 +22,7 @@ int main()
 	{
 		monitor.start_monitoring();
 	}
-	catch(std::system_error e)
+	catch (...)
 	{
 		exit(1);
 	}

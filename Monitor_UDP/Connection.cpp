@@ -54,7 +54,7 @@ void Connection::start_connection()
 	{
 		send_binding_request();
 	}
-	catch (std::system_error& e)
+	catch (...)
 	{
 		//std::cout << e.code() << std::endl;
 	}
@@ -168,7 +168,7 @@ void Connection::wait_handle(const boost::system::error_code error)
 			{
 				send_binding_request();
 			}
-			catch (std::system_error& e)
+			catch (...)
 			{
 				//std::cout << e.code() << std::endl;
 			}

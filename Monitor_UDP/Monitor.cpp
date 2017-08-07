@@ -89,7 +89,7 @@ void Monitor::verification_result_monitoring()
 		json_file.close();
 		//std::cout << "Record file at " + _address_record_file << std::endl;
 	}
-	catch(std::system_error e)
+	catch(...)
 	{
 		exit(1);
 	}
