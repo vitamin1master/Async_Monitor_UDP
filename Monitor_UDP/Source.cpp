@@ -1,12 +1,15 @@
 #include "Monitor.h"
 #include "parsing_config.h"
-#include <json/reader.h>
-#include <json/value.h>
 #include "requester_ip_list.h"
 
-int main()
+int main(int argc, char* argv[])
 {
-	parsing_config config("config.json");
+	if(argc!=2)
+	{
+		exit(1);
+	}
+	std::string path_config = argv[1];
+	parsing_config config(path_config);
 	if (!config.parsing_successful)
 	{
 		exit(1);

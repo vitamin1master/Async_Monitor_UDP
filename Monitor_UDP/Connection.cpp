@@ -1,7 +1,5 @@
 #include "Connection.h"
 #include <boost/bind.hpp>
-#include <iostream>
-#include <stdio.h>
 #include <boost/function.hpp>
 #include "stun_response.h"
 

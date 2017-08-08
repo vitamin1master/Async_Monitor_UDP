@@ -1,5 +1,4 @@
 #pragma once
-#include <string>
 #include <vector>
 #include <boost/asio.hpp>
 #include "parsing_config.h"

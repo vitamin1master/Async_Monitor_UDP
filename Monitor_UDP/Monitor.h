@@ -1,12 +1,8 @@
 #pragma once
-
-
-#include <boost/property_tree/ptree.hpp>
 #include <boost/asio.hpp>
 #include "Connection.h"
 #include "connection_info.h"
 #include "requester_ip_list.h"
-#include <memory.h>
 using boost::asio::ip::tcp;
 
 class Monitor 

@@ -103,14 +103,18 @@ bool requester_ip_list::get_addresses_monitoring()
 	{
 		
 	}
-	//Write the main part of message in a file
-	std::ofstream record_file("download_file.json", std::ofstream::out);
-	record_file << &_response;
-	record_file.close();
-	//Read json file and parse him
+
+	/*Json::Value root;
+	std::ostringstream os;
+	os << &_response;
+	std::string str = os.str();
+	std::istringstream is(str);
+	is >> root;*/
+
 	Json::Value root;
 	std::ifstream read_file("download_file.json");
 	read_file >> root;
+
 	servers_ports_list.clear();
 	for (auto it = root.begin(); it != root.end(); ++it)
 	{

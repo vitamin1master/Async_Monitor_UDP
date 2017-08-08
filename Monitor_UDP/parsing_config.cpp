@@ -3,10 +3,7 @@
 #include <json/reader.h>
 #include <json/writer.h>
 #include <json/value.h>
-#include <iostream>
 #include <fstream>
-//#include <json/value.h>
-//#include <json/reader.h>
 
 //public:
 parsing_config::parsing_config(std::string path_config) :address_config_file(path_config)
