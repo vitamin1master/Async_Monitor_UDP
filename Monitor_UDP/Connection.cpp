@@ -133,7 +133,9 @@ void Connection::read_handle(const boost::system::error_code& error, size_t byte
 		_read_indicator = false;
 		return;
 	}
-	uint16_t port = ntohs(response_struct.mappedaddr_attr.port);
+	uint16_t port = 
+	//response_struct.mappedaddr_attr.port;
+	ntohs(response_struct.mappedaddr_attr.port);
 	port ^= 0x2112;
 	char* mapped_address = new char[20];
 	snprintf(mapped_address, 20, "%d.%d.%d.%d:%hu", std::abs(response_struct.mappedaddr_attr.id[0] ^ 0x21), std::abs(response_struct.mappedaddr_attr.id[1] ^ 0x12),

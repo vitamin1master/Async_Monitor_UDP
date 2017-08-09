@@ -8,7 +8,7 @@
 class connection_test_packet : public std::enable_shared_from_this<connection_test_packet>
 {
 public:
-	connection_test_packet(connection_info info_, boost::asio::io_service& service, boost::function<void(std::shared_ptr<connection_test_packet>)> func);
+	connection_test_packet(connection_info info_, boost::asio::io_service& service, boost::function<void(std::shared_ptr<connection_test_packet>&)> func);
 	~connection_test_packet();
 
 	static const int _max_length_response = 128;
@@ -27,6 +27,6 @@ public:
 	char response_buffer[_max_length_response];
 
 	boost::asio::ip::udp::endpoint end_point;
-	boost::function<void(std::shared_ptr<connection_test_packet>)> connection_stop_handler;
+	boost::function<void(std::shared_ptr<connection_test_packet>&)> connection_stop_handler;
 };
 

@@ -7,9 +7,9 @@
 
 //public:
 multitask_connection::multitask_connection(std::vector<std::pair<std::string, int>> servers_ports_list,
-	boost::function<void(std::vector<connection_info> completed_connections_info_list)> func) : _socket(_io_service), all_connections_stopped_handle(func)
+	boost::function<void(std::vector<connection_info>)> func) : _socket(_io_service), all_connections_stopped_handle(func)
 {
-	boost::function<void(std::shared_ptr<connection_test_packet>)> connection_stop_handle(boost::bind(&multitask_connection::stop_connection, this, _1));
+	boost::function<void(std::shared_ptr<connection_test_packet>&)> connection_stop_handle(boost::bind(&multitask_connection::stop_connection, this, _1));
 	int index = 0;
 	for (auto it : servers_ports_list)
 	{
@@ -33,7 +33,8 @@ void multitask_connection::connect()
 		snprintf(server, it->info.server_id.length() + 1, it->info.server_id.c_str());
 		udp::endpoint endPoint_udp(boost::asio::ip::address::from_string(server), it->info.server_port);
 		_socket.async_connect(endPoint_udp, boost::bind(&multitask_connection::connect_handle, this, it, _1));
-		std::this_thread::sleep_for(std::chrono::milliseconds(_interval));
+		std::chrono::milliseconds ms{_interval};
+		std::this_thread::sleep_for(ms);
 	}
 	_io_service.run();
 }

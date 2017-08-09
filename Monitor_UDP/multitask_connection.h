@@ -39,6 +39,6 @@ private:
 	static const int _interval = 30;
 	boost::asio::io_service _io_service;
 	udp::socket _socket;
-	boost::function<void(std::vector<connection_info> completed_connections_info_list)> all_connections_stopped_handle;
+	boost::function<void(std::vector<connection_info>)> all_connections_stopped_handle;
 };
 

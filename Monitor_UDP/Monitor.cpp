@@ -95,7 +95,6 @@ void Monitor::verification_result_monitoring(std::vector<connection_info> comple
 		root["Servers"] = servers;
 		json_file << root;
 		json_file.close();
-		std::cout << "Results recorded" << std::endl;
 	}
 	catch(...)
 	{
