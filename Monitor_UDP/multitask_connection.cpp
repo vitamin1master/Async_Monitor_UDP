@@ -1,14 +1,15 @@
-#include "multitast_connection.h"
+#include "multitask_connection.h"
 #include <boost/bind.hpp>
 #include <boost/function.hpp>
 #include "stun_response.h"
 #include <iostream>
+#include <thread>
 
 //public:
-multitast_connection::multitast_connection(std::vector<std::pair<std::string, int>> servers_ports_list,
+multitask_connection::multitask_connection(std::vector<std::pair<std::string, int>> servers_ports_list,
 	boost::function<void(std::vector<connection_info> completed_connections_info_list)> func) : _socket(_io_service), all_connections_stopped_handle(func)
 {
-	boost::function<void(std::shared_ptr<connection_test_packet>)> connection_stop_handle(boost::bind(&multitast_connection::stop_connection, this, _1));
+	boost::function<void(std::shared_ptr<connection_test_packet>)> connection_stop_handle(boost::bind(&multitask_connection::stop_connection, this, _1));
 	int index = 0;
 	for (auto it : servers_ports_list)
 	{
@@ -20,25 +21,25 @@ multitast_connection::multitast_connection(std::vector<std::pair<std::string, in
 	}
 }
 
-multitast_connection::~multitast_connection()
+multitask_connection::~multitask_connection()
 {
 }
 
-void multitast_connection::connect()
+void multitask_connection::connect()
 {
 	for (auto &it : connections_list)
 	{
 		char* server = new char[it->info.server_id.length() + 1];
 		snprintf(server, it->info.server_id.length() + 1, it->info.server_id.c_str());
 		udp::endpoint endPoint_udp(boost::asio::ip::address::from_string(server), it->info.server_port);
-		_socket.async_connect(endPoint_udp, boost::bind(&multitast_connection::connect_handle, this, it, _1));
-		Sleep(interval);
+		_socket.async_connect(endPoint_udp, boost::bind(&multitask_connection::connect_handle, this, it, _1));
+		std::this_thread::sleep_for(std::chrono::milliseconds(_interval));
 	}
 	_io_service.run();
 }
 
 //private:
-void multitast_connection::connect_handle(std::shared_ptr<connection_test_packet>& connection, const boost::system::error_code error)
+void multitask_connection::connect_handle(std::shared_ptr<connection_test_packet>& connection, const boost::system::error_code error)
 {
 	if (error)
 	{
@@ -48,7 +49,7 @@ void multitast_connection::connect_handle(std::shared_ptr<connection_test_packet
 	start_connection(connection);
 }
 
-void multitast_connection::send_binding_request(std::shared_ptr<connection_test_packet>& connection)
+void multitask_connection::send_binding_request(std::shared_ptr<connection_test_packet>& connection)
 {
 	connection->request_header.msg_type = msg_type_binding_request;
 	connection->request_header.data_len = 0;
@@ -57,10 +58,10 @@ void multitast_connection::send_binding_request(std::shared_ptr<connection_test_
 	connection->request_header.id[0] = rand() % 2147483647;
 	connection->request_header.id[1] = rand() % 2147483647;
 	connection->request_header.id[2] = rand() % 2147483647;
-	_socket.async_send_to(boost::asio::buffer(&connection->request_header, sizeof connection->request_header), connection->end_point, boost::bind(&multitast_connection::write_handle, this, connection, _1,_2));
+	_socket.async_send_to(boost::asio::buffer(&connection->request_header, sizeof connection->request_header), connection->end_point, boost::bind(&multitask_connection::write_handle, this, connection, _1,_2));
 }
 
-void multitast_connection::start_connection(std::shared_ptr<connection_test_packet>& connection)
+void multitask_connection::start_connection(std::shared_ptr<connection_test_packet>& connection)
 {
 	connection->connect_indicator = true;
 	connection->count_send_request = 1;
@@ -73,10 +74,10 @@ void multitast_connection::start_connection(std::shared_ptr<connection_test_pack
 		//std::cout << e.code() << std::endl;
 	}
 	connection->timer.expires_from_now(boost::posix_time::milliseconds(_delay));
-	connection->timer.async_wait(boost::bind(&multitast_connection::wait_handle, this, connection, _1));
+	connection->timer.async_wait(boost::bind(&multitask_connection::wait_handle, this, connection, _1));
 }
 
-void multitast_connection::wait_handle(std::shared_ptr<connection_test_packet>& connection, const boost::system::error_code error)
+void multitask_connection::wait_handle(std::shared_ptr<connection_test_packet>& connection, const boost::system::error_code error)
 {
 	if (error)
 	{
@@ -96,7 +97,7 @@ void multitast_connection::wait_handle(std::shared_ptr<connection_test_packet>& 
 				//std::cout << e.code() << std::endl;
 			}
 			connection->timer.expires_from_now(boost::posix_time::milliseconds(_delay));
-			connection->timer.async_wait(boost::bind(&multitast_connection::wait_handle, this, connection, _1));
+			connection->timer.async_wait(boost::bind(&multitask_connection::wait_handle, this, connection, _1));
 		}
 		else
 		{
@@ -119,7 +120,7 @@ void multitast_connection::wait_handle(std::shared_ptr<connection_test_packet>& 
 	}
 }
 
-void multitast_connection::write_handle(std::shared_ptr<connection_test_packet>& connection, const boost::system::error_code& error, size_t bytes)
+void multitask_connection::write_handle(std::shared_ptr<connection_test_packet>& connection, const boost::system::error_code& error, size_t bytes)
 {
 	if(!error)
 	{
@@ -127,7 +128,7 @@ void multitast_connection::write_handle(std::shared_ptr<connection_test_packet>&
 	}
 }
 
-void multitast_connection::stop_connection(std::shared_ptr<connection_test_packet>& connection)
+void multitask_connection::stop_connection(std::shared_ptr<connection_test_packet>& connection)
 {
 	auto iterator = std::find(connections_list.begin(), connections_list.end(), connection);
 	if (iterator != connections_list.end())
@@ -140,7 +141,7 @@ void multitast_connection::stop_connection(std::shared_ptr<connection_test_packe
 	}
 }
 
-void multitast_connection::read_handle(std::shared_ptr<connection_test_packet>& connection, const boost::system::error_code& error, size_t bytes)
+void multitask_connection::read_handle(std::shared_ptr<connection_test_packet>& connection, const boost::system::error_code& error, size_t bytes)
 {
 	if(error)
 	{
@@ -193,17 +194,17 @@ void multitast_connection::read_handle(std::shared_ptr<connection_test_packet>& 
 	server_is_active(connection);
 }
 
-void multitast_connection::do_read(std::shared_ptr<connection_test_packet>& connection)
+void multitask_connection::do_read(std::shared_ptr<connection_test_packet>& connection)
 {
 	if(!connection->read_indicator)
 	{
 		_socket.async_receive_from(boost::asio::buffer(connection->response_buffer, connection->_max_length_response), connection->end_point,
-			boost::bind(&multitast_connection::read_handle, this, connection, _1, _2));
+			boost::bind(&multitask_connection::read_handle, this, connection, _1, _2));
 		connection->read_indicator = true;
 	}
 }
 
-void multitast_connection::server_is_active(std::shared_ptr<connection_test_packet>& connection)
+void multitask_connection::server_is_active(std::shared_ptr<connection_test_packet>& connection)
 {
 	connection->timer.cancel();
 	connection->stop_indicator = true;

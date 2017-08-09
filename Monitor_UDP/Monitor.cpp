@@ -5,8 +5,9 @@
 #include <json/reader.h>
 #include <json/writer.h>
 #include <fstream>
-#include "multitast_connection.h"
+#include "multitask_connection.h"
 #include <iostream>
+#include <thread>
 using boost::asio::ip::tcp;
 
 //public:
@@ -35,7 +36,7 @@ void Monitor::start_monitoring()
 	//_io_service->run();
 
 	boost::function<void(std::vector<connection_info> completed_connections_info_list)> ver_res_monitoring_func(boost::bind(&Monitor::verification_result_monitoring, this,_1));
-	multitast_connection con(_requester->servers_ports_list, ver_res_monitoring_func);
+	multitask_connection con(_requester->servers_ports_list, ver_res_monitoring_func);
 	con.connect();
 }
 
@@ -95,7 +96,6 @@ void Monitor::verification_result_monitoring(std::vector<connection_info> comple
 		json_file << root;
 		json_file.close();
 		std::cout << "Results recorded" << std::endl;
-		Sleep((DWORD)500);
 	}
 	catch(...)
 	{

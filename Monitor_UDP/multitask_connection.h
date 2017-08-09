@@ -12,11 +12,11 @@
 using boost::asio::ip::tcp;
 using boost::asio::ip::udp;
 
-class multitast_connection
+class multitask_connection
 {
 public:
-	multitast_connection(std::vector<std::pair<std::string, int>> servers_ports_list, boost::function<void(std::vector<connection_info> completed_connections_info_list)> func);
-	~multitast_connection();
+	multitask_connection(std::vector<std::pair<std::string, int>> servers_ports_list, boost::function<void(std::vector<connection_info> completed_connections_info_list)> func);
+	~multitask_connection();
 
 	
 	void connect();
@@ -36,7 +36,7 @@ private:
 
 	static const int _delay = 500;
 	static const int _max_count_send_request = 15;
-	static const DWORD interval = 30;
+	static const int _interval = 30;
 	boost::asio::io_service _io_service;
 	udp::socket _socket;
 	boost::function<void(std::vector<connection_info> completed_connections_info_list)> all_connections_stopped_handle;
