@@ -4,11 +4,16 @@
 
 int main(int argc, char* argv[])
 {
+	std::string path_config;
 	if(argc!=2)
 	{
-		exit(1);
+		path_config = "config.json";
+		//exit(1);
 	}
-	std::string path_config = argv[1];
+	else
+	{
+		path_config = argv[1];
+	}
 	parsing_config config(path_config);
 	if (!config.parsing_successful)
 	{

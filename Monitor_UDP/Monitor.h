@@ -20,7 +20,7 @@ private:
 
 	void stop_connection(std::shared_ptr<Connection> connection);
 	//Analysis of monitorin data
-	void verification_result_monitoring();
+	void verification_result_monitoring(std::vector<connection_info> completed_connections_info_list);
 
 	void initialization_components();
 };
