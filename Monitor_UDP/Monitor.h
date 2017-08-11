@@ -1,6 +1,5 @@
 #pragma once
 #include <boost/asio.hpp>
-#include "Connection.h"
 #include "connection_info.h"
 #include "requester_ip_list.h"
 using boost::asio::ip::tcp;
@@ -8,20 +7,19 @@ using boost::asio::ip::tcp;
 class Monitor 
 {
 public:
-	Monitor(std::shared_ptr<requester_ip_list> &requester);
+	//Analysis of monitorin data
+	Monitor();
 	~Monitor();
-	void start_monitoring();
+	bool start_monitoring(const data_for_monitoring& data_for_monitoring_);
 
 private:
-	std::shared_ptr<boost::asio::io_service> _io_service;
-	std::vector<std::shared_ptr<Connection>> _connections_list;
-	std::vector<connection_info> _completed_connections_info_list;
-	std::shared_ptr<requester_ip_list> _requester;
-
-	void stop_connection(std::shared_ptr<Connection> connection);
-	//Analysis of monitorin data
 	void verification_result_monitoring(std::vector<connection_info> completed_connections_info_list);
 
-	void initialization_components();
+	void initialization_components(const data_for_monitoring& data_for_monitoring_);
+
+	std::shared_ptr<boost::asio::io_service> _io_service;
+	std::vector<connection_info> _completed_connections_info_list;
+	std::string _address_record_file;
+	bool _successful_monitoring_indicator;
 };
 

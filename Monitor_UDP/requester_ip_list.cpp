@@ -3,43 +3,61 @@
 #include <json/json.h>
 #include <json/reader.h>
 #include <json/writer.h>
+#include <iostream>
 
 
-requester_ip_list::requester_ip_list(const parsing_config& parsing) :config(parsing),_socket(_io_service), _resolver(_io_service)
+requester_ip_list::requester_ip_list() : _socket(_io_service), _resolver(_io_service)
 {
-	if (!config.parsing_successful)
-	{
-		request_successful = config.parsing_successful;
-		exit(1);
-	}
-	try
-	{
-		request_successful = get_addresses_monitoring();
-	}
-	catch(...)
-	{
-		exit(1);
-	}
+
 }
 
-requester_ip_list::~requester_ip_list()
+bool requester_ip_list::request(const parsing_config& config, data_for_monitoring& data_for_monitoring_)
 {
+	if (!send_http_request(config))
+	{
+		return false;
+	}
+
+	if (!receive_http_response(config))
+	{
+		return false;
+	}
+
+	if (!response_analysis(data_for_monitoring_))
+	{
+
+		std::cerr << "Invalid download json file: " << std::endl;
+		return false;
+	}
+
+	data_for_monitoring_.address_record_file = config.address_record_file;
+	return true;
 }
 
-void requester_ip_list::listing_servers_and_ports(Json::Value::const_iterator const& branch)
+bool requester_ip_list::listing_servers_and_ports(Json::Value::const_iterator const& branch, data_for_monitoring& data_for_monitoring_)
 {
 	auto it = branch->begin();
 	auto end = branch->end();
 	if (it != end)
 	{
 		std::string server = it->asString();
-		++it;
+		*it++;
+		if (it == end)
+		{
+			return false;
+		}
 		int port = it->asInt();
-		servers_ports_list.push_back(std::pair<std::string, int>(server, port));
+		if(server==""||port==0)
+		{
+			return false;
+		}
+		data_for_monitoring_.servers_ports_list.push_back(std::pair<std::string, int>(server, port));
+		return true;
 	}
+	return false;
 }
 
-bool requester_ip_list::get_addresses_monitoring()
+bool requester_ip_list::send_http_request(const parsing_config& config)
 {
 	//Create request
 	std::iostream request_stream(&_request);
@@ -48,39 +66,54 @@ bool requester_ip_list::get_addresses_monitoring()
 	request_stream << "Accept: */*\r\n";
 	request_stream << "Connection: close\r\n\r\n";
 
+	boost::system::error_code ec;
+
 	//Connect to server
 	tcp::resolver::query query(config.url_give_servers, "http");
-	try
+	tcp::resolver::iterator it = _resolver.resolve(query,ec);
+	if (ec)
 	{
-		tcp::resolver::iterator it = _resolver.resolve(query);
-		tcp::resolver::iterator end;
-		boost::system::error_code error = boost::asio::error::host_not_found;
-		while (error&&it != end)
-		{
-			_socket.close();
-			_socket.connect(*it);
-			*it++;
-		}
+		std::cerr << "Invalid url_give_servers or problems with connection: " << ec.message() << std::endl;
+		return false;
 	}
-	catch (...)
+
+	tcp::resolver::iterator end;
+
+	ec = boost::asio::error::host_not_found;
+	while (ec&&it != end)
 	{
-		//std::cout << "Invalid URL or connections problems occurred" << std::endl;
+		_socket.close();
+		_socket.connect(*it,ec);
+		*it++;
+	}
+	if (ec)
+	{
+		std::cerr << "Can't connect by http: " << ec.message() << std::endl;
 		return false;
 	}
 
 	//Send request
-	try
+	boost::asio::write(_socket, _request, ec);
+	if (ec)
 	{
-		boost::asio::write(_socket, _request);
-	}
-	catch (...)
-	{
-		//std::cout << "Error sending request" << std::endl;
+		std::cerr << "Can't send message by http: " << ec.message() << std::endl;
 		return false;
 	}
-	boost::asio::read_until(_socket, _response, '\n');
+	return true;
+}
 
-	//get data on response
+bool requester_ip_list::receive_http_response(const parsing_config& config)
+{
+	boost::system::error_code ec;
+
+	boost::asio::read_until(_socket, _response, '\n', ec);
+	if (ec)
+	{
+		std::cerr << "Can't read response by http: " << ec.message() << std::endl;
+		return false;
+	}
+
+	//Get data on response
 	std::iostream response_stream(&_response);
 	std::string http_version;
 	std::string status_message;
@@ -89,13 +122,20 @@ bool requester_ip_list::get_addresses_monitoring()
 	response_stream >> http_version;
 	response_stream >> status_code;
 	std::getline(response_stream, status_message);
+
 	//Check the correctness of the response
-	if (!response_stream&&http_version.substr(0, 5) != "HTTP")
+	if (!response_stream || http_version.find("HTTP")==std::string::npos)
 	{
-		//std::cout << "Invalid response" << std::endl;
+		std::cerr << "Invalid response" << std::endl;
 		return false;
 	}
-	boost::asio::read_until(_socket, _response, "\r\n\r\n");
+
+	boost::asio::read_until(_socket, _response, "\r\n\r\n", ec);
+	if (ec)
+	{
+		std::cerr << "Can't read response by http: " << ec.message() << std::endl;
+		return false;
+	}
 	std::string header;
 
 	//Remove superfluous
@@ -111,19 +151,26 @@ bool requester_ip_list::get_addresses_monitoring()
 	std::istringstream is(str);
 	is >> root;*/
 
-	Json::Value root;
 	std::ifstream read_file("download_file.json");
-	read_file >> root;
+	Json::Reader reader;
+	reader.parse(read_file, _root);
 
-	servers_ports_list.clear();
-	for (auto it = root.begin(); it != root.end(); ++it)
+	return true;
+}
+
+bool requester_ip_list::response_analysis(data_for_monitoring& data_for_monitoring_)
+{
+	for (auto it = _root.begin(); it != _root.end(); ++it)
 	{
-		listing_servers_and_ports(it);
+		if (!listing_servers_and_ports(it, data_for_monitoring_))
+		{
+			return false;
+		}
 	}
-	if (servers_ports_list.size())
+	if (!data_for_monitoring_.servers_ports_list.size())
 	{
-		//std::cout << "Successfully obtained a servers list from " << _url_give_servers << _get_command << std::endl;
-		return true;
+		return false;
 	}
-	return false;
+	//std::cout << "Successfully obtained a servers list from " << _url_give_servers << _get_command << std::endl;
+	return true;
 }

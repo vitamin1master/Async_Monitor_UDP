@@ -1,52 +1,29 @@
-#include "parsing_config.h"
-#include <json/json.h>
-#include <json/reader.h>
-#include <json/writer.h>
+﻿#include "parsing_config.h"
 #include <json/value.h>
+#include <json/reader.h>
 #include <fstream>
 
-//public:
-parsing_config::parsing_config(std::string path_config) :address_config_file(path_config)
+bool parsing_config::parse(std::string config_path)
 {
-	parsing_successful = parsing_config_file();
-}
-
-parsing_config::parsing_config(const parsing_config& parsing): parsing_successful(parsing.parsing_successful), address_config_file(parsing.address_config_file), url_give_servers(parsing.url_give_servers),
-                                                               address_record_file(parsing.address_record_file), get_command(parsing.get_command)
-{
-}
-
-parsing_config::~parsing_config()
-{
-}
-
-//private:
-bool parsing_config::parsing_config_file()
-{
+	address_config_file = config_path;
 	Json::Value root;
 	Json::Reader reader;
-	try 
+	std::ifstream in(address_config_file);
+
+	if (!reader.parse(in, root))
 	{
-		std::ifstream in(address_config_file);
-		in >> root;
-		address_record_file = root["captureRecordFile"].asString();
-		url_give_servers = root["urlResource"].asString();
-	}
-	catch (...)
-	{
-		//std::cout << "Invalid config file: " << std::endl;
 		return false;
 	}
-	select_get_command();
-	return true;
-}
 
-void parsing_config::select_get_command()
-{
-	if (url_give_servers == "")
+	address_record_file = root["captureRecordFile"].asString();
+	url_give_servers = root["urlResource"].asString();
+
+	if (address_record_file == "" || url_give_servers == "")
 	{
-		return;
+		return false;
 	}
+
+	//Select get_command
 	int position = url_give_servers.find('/');
 	if (position != std::string::npos)
 	{
@@ -57,4 +34,6 @@ void parsing_config::select_get_command()
 	{
 		get_command = "";
 	}
+
+	return true;
 }
