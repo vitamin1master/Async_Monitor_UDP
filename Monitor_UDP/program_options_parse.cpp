@@ -1,11 +1,12 @@
+#pragma once
+
+#include "program_options_parse.h"
 #include <boost/program_options.hpp>
 #include <iostream>
-#include "program_options_parse.h"
-#include <boost/system/system_error.hpp>
 
 namespace po = boost::program_options;
 
-bool program_options_parse::po_parse(const int argc, char* argv[], std::string& config_path_)
+bool po_parse(const int argc, char* argv[], std::string& config_path_)
 {
 	po::options_description general_options("General options");
 	std::string config_path;
