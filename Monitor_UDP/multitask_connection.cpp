@@ -190,7 +190,7 @@ void multitask_connection::read_handle(const std::shared_ptr<connection_test_pac
 	uint16_t port = ntohs(response_struct.mappedaddr_attr.port);
 	port ^= 0x2112;
 	char* mapped_address = new char[20];
-	snprintf(mapped_address, 20, "%d.%d.%d.%d:%hu", std::abs(response_struct.mappedaddr_attr.id[0] ^ 0x21), std::abs(response_struct.mappedaddr_attr.id[1] ^ 0x12),
+	snprintf(mapped_address, 20, "%d.%d.%d.%d:%f", std::abs(response_struct.mappedaddr_attr.id[0] ^ 0x21), std::abs(response_struct.mappedaddr_attr.id[1] ^ 0x12),
 		std::abs(response_struct.mappedaddr_attr.id[2] ^ 0xA4), std::abs(response_struct.mappedaddr_attr.id[3] ^ 0x42), std::abs(port));
 
 	std::string intermediateString(mapped_address);

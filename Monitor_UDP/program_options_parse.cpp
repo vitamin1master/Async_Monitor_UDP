@@ -1,5 +1,3 @@
-#pragma once
-
 #include "program_options_parse.h"
 #include <boost/program_options.hpp>
 #include <iostream>
@@ -31,6 +29,7 @@ bool po_parse(const int argc, char* argv[], std::string& config_path_)
 	if(vm.count("help"))
 	{
 		std::cout << general_options << std::endl;
+		std::cerr << "Entered the help option" << std::endl;
 		return false;
 	}
 	
@@ -41,9 +40,11 @@ bool po_parse(const int argc, char* argv[], std::string& config_path_)
 			config_path_ = config_path;
 			return true;
 		}
+		std::cerr << "config_path is empty" << std::endl;
 		return false;
 	}
 
 	std::cout << "You have not entered the program options. Enter -h or --help to view the list of parameters" << std::endl;
+	std::cerr << "Unknown option" << std::endl;
 	return false;
 }
