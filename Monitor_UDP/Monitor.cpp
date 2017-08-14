@@ -24,9 +24,11 @@ bool Monitor::start_monitoring(const data_for_monitoring& data_for_monitoring_)
 	
 	multitask_connection mult_con;
 
-	boost::function<void(std::vector<connection_info> completed_connections_info_list)> ver_res_monitoring_func(boost::bind(&Monitor::verification_result_monitoring, this,_1));
+	boost::function<void(std::vector<connection_info> completed_connections_info_list)>
+		ver_res_monitoring_func(boost::bind(&Monitor::verification_result_monitoring, this, _1));
 
-	if (mult_con.start_checking(data_for_monitoring_.servers_ports_list, ver_res_monitoring_func))
+	if (mult_con.start_checking(data_for_monitoring_.servers_ports_list, ver_res_monitoring_func,
+		data_for_monitoring_.period_sending_request_ms, data_for_monitoring_.max_number_request_sent))
 	{
 		return _successful_monitoring_indicator;
 	}
@@ -43,7 +45,7 @@ void Monitor::initialization_components(const data_for_monitoring& data_for_moni
 	_successful_monitoring_indicator = true;
 }
 
-void Monitor::verification_result_monitoring(std::vector<connection_info> completed_connections_info_list)
+void Monitor::verification_result_monitoring(const std::vector<connection_info>& completed_connections_info_list)
 {
 	//Open json file on write
 	std::ofstream json_file(_address_record_file);

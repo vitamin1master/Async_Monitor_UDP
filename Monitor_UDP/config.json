@@ -1,4 +1,6 @@
 {
-	"captureRecordFile": "MonitoringResult.json",
-	"urlResource": "SomeKindURL.Example: sample.com/example"
+	"capture_record_file": "C:\\FilesRecord\\MonitoringResult.json",
+	"url_resource": "google.com",
+	"period_sending_request_ms": 500,
+	"max_number_request_sent": 20
 }

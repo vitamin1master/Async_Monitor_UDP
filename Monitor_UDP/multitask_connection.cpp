@@ -3,7 +3,7 @@
 #include <iostream>
 
 //public:
-multitask_connection::multitask_connection() : _socket(_io_service, udp::v4())
+multitask_connection::multitask_connection() : _socket(_io_service, udp::v4()), _period_sending_request_ms(0), _max_number_request_sent(0)
 {
 }
 
@@ -23,10 +23,13 @@ multitask_connection::~multitask_connection()
 	}
 }
 
-bool multitask_connection::start_checking(const std::vector<std::pair<std::string, int>>& servers_ports_list, const boost::function<void(std::vector<connection_info> completed_connections_info_list)>& func)
+bool multitask_connection::start_checking(const std::vector<std::pair<std::string, int>>& servers_ports_list, const boost::function<void(const std::vector<connection_info> completed_connections_info_list)>& func, const int& period_sending_request_ms, const int& max_number_request_sent)
 {
+	_period_sending_request_ms = period_sending_request_ms;
+	_max_number_request_sent = max_number_request_sent;
+
 	_all_connections_stopped_handle = func;
-	boost::function<void(std::shared_ptr<connection_test_packet>&)> connection_stop_handle(boost::bind(&multitask_connection::stop_connection, this, _1));
+	boost::function<void(const std::shared_ptr<const connection_test_packet>&)> connection_stop_handle(boost::bind(&multitask_connection::stop_connection, this, _1));
 	
 	boost::system::error_code ec;
 	if (!_socket.is_open())
@@ -59,7 +62,7 @@ bool multitask_connection::start_checking(const std::vector<std::pair<std::strin
 }
 
 //private:
-void multitask_connection::connect_handle(std::shared_ptr<connection_test_packet>& connection, const boost::system::error_code error)
+void multitask_connection::connect_handle(const std::shared_ptr<connection_test_packet>& connection, const boost::system::error_code error)
 {
 	if (error)
 	{
@@ -70,7 +73,7 @@ void multitask_connection::connect_handle(std::shared_ptr<connection_test_packet
 	start_connection(connection);
 }
 
-void multitask_connection::send_binding_request(std::shared_ptr<connection_test_packet>& connection)
+void multitask_connection::send_binding_request(const std::shared_ptr<connection_test_packet>& connection)
 {
 	if(!_connections_list.size())
 	{
@@ -93,28 +96,28 @@ void multitask_connection::send_binding_request(std::shared_ptr<connection_test_
 	_socket.async_send_to(boost::asio::buffer(&connection->request_header, sizeof connection->request_header), connection->end_point, boost::bind(&multitask_connection::write_handle, this, connection, _1,_2));
 }
 
-void multitask_connection::start_connection(std::shared_ptr<connection_test_packet>& connection)
+void multitask_connection::start_connection(const std::shared_ptr<connection_test_packet>& connection)
 {
 	connection->count_send_request = 0;
 	send_binding_request(connection);
 	
-	connection->timer.expires_from_now(boost::posix_time::milliseconds(delay));
+	connection->timer.expires_from_now(boost::posix_time::milliseconds(_period_sending_request_ms));
 	connection->timer.async_wait(boost::bind(&multitask_connection::wait_handle, this, connection, _1));
 }
 
-void multitask_connection::wait_handle(std::shared_ptr<connection_test_packet>& connection, const boost::system::error_code error)
+void multitask_connection::wait_handle(const std::shared_ptr<connection_test_packet>& connection, const boost::system::error_code error)
 {
 	if (error)
 	{
 		return;
 	}
-	if (connection->count_send_request < max_count_send_request)
+	if (connection->count_send_request < _max_number_request_sent)
 	{
 		if (!connection->stop_indicator)
 		{
 			send_binding_request(connection);
 
-			connection->timer.expires_from_now(boost::posix_time::milliseconds(delay));
+			connection->timer.expires_from_now(boost::posix_time::milliseconds(_period_sending_request_ms));
 			connection->timer.async_wait(boost::bind(&multitask_connection::wait_handle, this, connection, _1));
 		}
 	}
@@ -132,7 +135,7 @@ void multitask_connection::wait_handle(std::shared_ptr<connection_test_packet>& 
 	}
 }
 
-void multitask_connection::write_handle(std::shared_ptr<connection_test_packet>& connection, const boost::system::error_code& error, size_t bytes)
+void multitask_connection::write_handle(const std::shared_ptr<connection_test_packet>& connection, const boost::system::error_code& error, size_t bytes)
 {
 	if(error)
 	{
@@ -142,7 +145,7 @@ void multitask_connection::write_handle(std::shared_ptr<connection_test_packet>&
 	do_read(connection);
 }
 
-void multitask_connection::stop_connection(std::shared_ptr<connection_test_packet>& connection)
+void multitask_connection::stop_connection(const std::shared_ptr<const connection_test_packet>& connection)
 {
 	auto iterator = std::find(_connections_list.begin(), _connections_list.end(), connection);
 	if (iterator == _connections_list.end())
@@ -162,7 +165,7 @@ void multitask_connection::stop_connection(std::shared_ptr<connection_test_packe
 	}
 }
 
-void multitask_connection::read_handle(std::shared_ptr<connection_test_packet>& connection, const boost::system::error_code& error, size_t bytes)
+void multitask_connection::read_handle(const std::shared_ptr<connection_test_packet>& connection, const boost::system::error_code& error, size_t bytes)
 {
 	connection->read_indicator = false;
 	if(error)
@@ -199,7 +202,7 @@ void multitask_connection::read_handle(std::shared_ptr<connection_test_packet>& 
 	mapped_address = nullptr;
 }
 
-void multitask_connection::do_read(std::shared_ptr<connection_test_packet>& connection)
+void multitask_connection::do_read(const std::shared_ptr<connection_test_packet>& connection)
 {
 	if(connection->read_indicator)
 	{
@@ -222,7 +225,7 @@ void multitask_connection::do_read(std::shared_ptr<connection_test_packet>& conn
 	connection->read_indicator = true;
 }
 
-void multitask_connection::server_is_active(std::shared_ptr<connection_test_packet>& connection)
+void multitask_connection::server_is_active(const std::shared_ptr<connection_test_packet>& connection)
 {
 	boost::system::error_code ec;
 	connection->timer.cancel(ec);
@@ -236,7 +239,7 @@ void multitask_connection::server_is_active(std::shared_ptr<connection_test_pack
 	connection->connection_stop_handler(connection);
 }
 
-bool multitask_connection::check_response(stun_response& response_struct, const std::shared_ptr<connection_test_packet>& connection, const size_t& bytes)
+bool multitask_connection::check_response(stun_response& response_struct, const std::shared_ptr<const connection_test_packet>& connection, const size_t& bytes) const
 {
 	if (response_struct.msg_type != msg_type_binding_response)
 	{
@@ -254,7 +257,7 @@ bool multitask_connection::check_response(stun_response& response_struct, const 
 
 	//Look for the response type==mappedaddr_attr
 	uint32_t response_data_len = ntohs(response_struct.data_len);
-	for (auto i = 0; i < response_data_len&&i < bytes - msg_hdr_length; i += ntohs(response_struct.mappedaddr_attr.length))
+	for (unsigned int i = 0; i < response_data_len&&i < bytes - msg_hdr_length; i += ntohs(response_struct.mappedaddr_attr.length))
 	{
 		if (i)
 		{

@@ -31,6 +31,9 @@ bool requester_ip_list::request(const parsing_config& config, data_for_monitorin
 	}
 
 	data_for_monitoring_.address_record_file = config.address_record_file;
+	data_for_monitoring_.max_number_request_sent = config.max_number_request_sent;
+	data_for_monitoring_.period_sending_request_ms = config.period_sending_request_ms;
+
 	return true;
 }
 

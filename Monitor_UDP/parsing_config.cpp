@@ -2,8 +2,9 @@
 #include <json/value.h>
 #include <json/reader.h>
 #include <fstream>
+#include <iostream>
 
-bool parsing_config::parse(std::string config_path)
+bool parsing_config::parse(const std::string& config_path)
 {
 	address_config_file = config_path;
 	Json::Value root;
@@ -12,14 +13,48 @@ bool parsing_config::parse(std::string config_path)
 
 	if (!reader.parse(in, root))
 	{
+		std::cerr << "Can't parse configuration file. See READMY.md" << std::endl;
+		return false;
+	}
+	try 
+	{
+		address_record_file = root["capture_record_file"].asString();
+		url_give_servers = root["url_resource"].asString();
+		period_sending_request_ms = root["period_sending_request_ms"].asInt();
+		max_number_request_sent = root["max_number_request_sent"].asInt();
+	}
+	catch(std::exception ec)
+	{
+		std::cerr << "Incorrect field values in the configuration file: " << ec.what() << std::endl;
 		return false;
 	}
 
-	address_record_file = root["captureRecordFile"].asString();
-	url_give_servers = root["urlResource"].asString();
-
-	if (address_record_file == "" || url_give_servers == "")
+	if (address_record_file == "" || url_give_servers == "" || period_sending_request_ms == 0 || max_number_request_sent == 0)
 	{
+		if(address_record_file == "")
+		{
+			std::cerr << "In the configuration file there is no definition of the address_record_file or it's value is empty"
+				<< std::endl;
+		}
+
+		if (url_give_servers == "")
+		{
+			std::cerr << "In the configuration file there is no definition of the url_give_servers or it's value is empty"
+				<< std::endl;
+		}
+
+		if (period_sending_request_ms == 0)
+		{
+			std::cerr << "In the configuration file there is no definition of the period_sending_request_ms or it's value is 0. See README.md"
+				<< std::endl;
+		}
+
+		if (max_number_request_sent == 0)
+		{
+			std::cerr << "In the configuration file there is no definition of the max_number_request_sent or it's value is 0. See READMY.md"
+				<< std::endl;
+		}
+
 		return false;
 	}
 

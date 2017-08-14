@@ -1,19 +1,20 @@
 #include "Monitor.h"
 #include "parsing_config.h"
 #include "requester_ip_list.h"
+#include "program_options_parse.h"
 
 int main(int argc, char* argv[])
 {
 	setlocale(LC_ALL, "Russian");
-	if(argc!=2)
+
+	std::string config_path;
+	if(!program_options_parse::po_parse(argc, argv, config_path))
 	{
 		return 1;
 	}
 
-	std::string path_config = argv[1];
-
 	parsing_config config;
-	if (!config.parse(argv[1]))
+	if (!config.parse(config_path))
 	{
 		return 1;
 	}

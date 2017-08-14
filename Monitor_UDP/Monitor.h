@@ -13,7 +13,7 @@ public:
 	bool start_monitoring(const data_for_monitoring& data_for_monitoring_);
 
 private:
-	void verification_result_monitoring(std::vector<connection_info> completed_connections_info_list);
+	void verification_result_monitoring(const std::vector<connection_info>& completed_connections_info_list);
 
 	void initialization_components(const data_for_monitoring& data_for_monitoring_);
 
