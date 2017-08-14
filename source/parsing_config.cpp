@@ -1,6 +1,4 @@
-﻿#include "parsing_config.h"
-#include <json/value.h>
-#include <json/reader.h>
+﻿#include "headers/parsing_config.h"
 #include <fstream>
 #include <iostream>
 

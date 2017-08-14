@@ -1,13 +1,9 @@
-#include "Monitor.h"
-#include "parsing_config.h"
-#include "requester_ip_list.h"
-#include "program_options_parse.h"
+#include "headers/monitor.h"
+#include "headers/program_options_parse.h"
 #include <iostream>
 
 int main(int argc, char* argv[])
 {
-	setlocale(LC_ALL, "Russian");
-
 	std::string config_path;
 
 	if(!po_parse(argc,argv,config_path))
@@ -28,7 +24,7 @@ int main(int argc, char* argv[])
 		return 1;
 	}
 
-	Monitor monitor;
+	monitor monitor;
 	if (!monitor.start_monitoring(data_for_monitoring_))
 	{
 		return 1;

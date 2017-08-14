@@ -1,5 +1,6 @@
 ﻿#pragma once
 #include <string>
+#include "json/json.h"
 
 struct parsing_config
 {

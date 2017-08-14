@@ -1,7 +1,7 @@
 #pragma once
 #include <boost/asio.hpp>
 #include "parsing_config.h"
-#include <json/value.h>
+#include "json/json.h"
 #include "data_for_monitoring.h"
 
 using boost::asio::ip::tcp;

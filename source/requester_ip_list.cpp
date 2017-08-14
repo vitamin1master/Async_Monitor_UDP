@@ -1,8 +1,5 @@
-#include "requester_ip_list.h"
+#include "headers/requester_ip_list.h"
 #include <fstream>
-#include <json/json.h>
-#include <json/reader.h>
-#include <json/writer.h>
 #include <iostream>
 
 

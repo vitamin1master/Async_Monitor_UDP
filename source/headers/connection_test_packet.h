@@ -10,7 +10,7 @@ public:
 	connection_test_packet(const connection_info& info_, boost::asio::io_service& service, const boost::function<void(const std::shared_ptr<const connection_test_packet>&)>& func);
 	~connection_test_packet();
 
-	static bool isConnectSougth(const std::shared_ptr<const connection_test_packet>& connection, const boost::asio::ip::udp::endpoint& end_point);
+	static bool is_connect_sougth(const std::shared_ptr<const connection_test_packet>& connection, const boost::asio::ip::udp::endpoint& end_point);
 
 	bool stop_indicator;
 	bool read_indicator;

@@ -1,5 +1,4 @@
-#include "multitask_connection.h"
-#include "stun_response.h"
+#include "headers/multitask_connection.h"
 #include <iostream>
 
 //public:
@@ -175,7 +174,7 @@ void multitask_connection::read_handle(const std::shared_ptr<connection_test_pac
 		return;
 	}
 
-	auto it=std::find_if(_connections_list.begin(), _connections_list.end(), std::bind(&connection_test_packet::isConnectSougth, std::placeholders::_1, connection->remote_end_point));
+	auto it=std::find_if(_connections_list.begin(), _connections_list.end(), std::bind(&connection_test_packet::is_connect_sougth, std::placeholders::_1, connection->remote_end_point));
 	if(it==_connections_list.end())
 	{
 		//A connection to the remote_end_point has already established, or message has come from an unknown source

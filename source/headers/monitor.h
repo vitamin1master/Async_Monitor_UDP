@@ -4,12 +4,12 @@
 #include "requester_ip_list.h"
 using boost::asio::ip::tcp;
 
-class Monitor 
+class monitor 
 {
 public:
 	//Analysis of monitorin data
-	Monitor();
-	~Monitor();
+	monitor();
+	~monitor();
 	bool start_monitoring(const data_for_monitoring& data_for_monitoring_);
 
 private:
