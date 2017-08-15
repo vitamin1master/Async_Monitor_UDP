@@ -14,4 +14,5 @@ struct parsing_config
 	//Initialization _get_commend
 
 	bool parse(const std::string& config_path);
+	bool check_values();
 };

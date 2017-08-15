@@ -10,6 +10,11 @@ requester_ip_list::requester_ip_list() : _socket(_io_service), _resolver(_io_ser
 
 bool requester_ip_list::request(const parsing_config& config, data_for_monitoring& data_for_monitoring_)
 {
+	if(!connect_http(config))
+	{
+		return false;
+	}
+
 	if (!send_http_request(config))
 	{
 		return false;
@@ -34,65 +39,19 @@ bool requester_ip_list::request(const parsing_config& config, data_for_monitorin
 	return true;
 }
 
-bool requester_ip_list::listing_servers_and_ports(Json::Value::const_iterator const& branch, data_for_monitoring& data_for_monitoring_)
-{
-	auto it = branch->begin();
-	auto end = branch->end();
-	if (it != end)
-	{
-		std::string server = it->asString();
-		*it++;
-		if (it == end)
-		{
-			return false;
-		}
-		int port = it->asInt();
-		if(server==""||port==0)
-		{
-			return false;
-		}
-		data_for_monitoring_.servers_ports_list.push_back(std::pair<std::string, int>(server, port));
-		return true;
-	}
-	return false;
-}
-
 bool requester_ip_list::send_http_request(const parsing_config& config)
 {
 	//Create request
 	std::iostream request_stream(&_request);
-	request_stream << "GET " << config.get_command << " HTTP/1.0\r\n";
-	request_stream << "Host: " << config.url_give_servers << "\r\n";
-	request_stream << "Accept: */*\r\n";
-	request_stream << "Connection: close\r\n\r\n";
-
-	boost::system::error_code ec;
-
-	//Connect to server
-	tcp::resolver::query query(config.url_give_servers, "http");
-	tcp::resolver::iterator it = _resolver.resolve(query,ec);
-	if (ec)
-	{
-		std::cerr << "Invalid url_give_servers or problems with connection: " << ec.message() << std::endl;
-		return false;
-	}
-
-	tcp::resolver::iterator end;
-
-	ec = boost::asio::error::host_not_found;
-	while (ec&&it != end)
-	{
-		_socket.close();
-		_socket.connect(*it,ec);
-		*it++;
-	}
-	if (ec)
-	{
-		std::cerr << "Can't connect by http: " << ec.message() << std::endl;
-		return false;
-	}
+	std::string EOS("\r\n");
+	request_stream << "GET " << config.get_command << " HTTP/1.0" << EOS;
+	request_stream << "Host: " << config.url_give_servers << EOS;
+	request_stream << "Accept: */*" << EOS;
+	request_stream << "Connection: close" << EOS << EOS;
 
 	//Send request
+	boost::system::error_code ec;
+
 	boost::asio::write(_socket, _request, ec);
 	if (ec)
 	{
@@ -160,17 +119,64 @@ bool requester_ip_list::receive_http_response(const parsing_config& config)
 
 bool requester_ip_list::response_analysis(data_for_monitoring& data_for_monitoring_)
 {
-	for (auto it = _root.begin(); it != _root.end(); ++it)
+    if(!_root.isArray())
+    {
+        std::cerr<<"The downloaded file does not contain an array of servers"<<std::endl;
+        return false;
+    }
+
+    for(auto it:_root)
+    {
+        if(!it.isMember("ip") || !it.isMember("port"))
+        {
+            return false;
+        }
+        try
+        {
+            data_for_monitoring_.servers_ports_list.push_back(
+                    std::pair<std::string, int>(it["ip"].asString(), it["port"].asInt()));
+        }
+        catch(const Json::LogicError& er)
+        {
+            std::cerr<<er.what()<<std::endl;
+            return false;
+        }
+        catch(const std::exception& ex)
+        {
+            return false;
+        }
+    }
+
+	return true;
+}
+
+bool requester_ip_list::connect_http(const parsing_config &config)
+{
+	boost::system::error_code ec;
+
+	//Connect to server
+	tcp::resolver::query query(config.url_give_servers, "http");
+	tcp::resolver::iterator it = _resolver.resolve(query,ec);
+	if (ec)
 	{
-		if (!listing_servers_and_ports(it, data_for_monitoring_))
-		{
-			return false;
-		}
-	}
-	if (!data_for_monitoring_.servers_ports_list.size())
-	{
+		std::cerr << "Invalid url_give_servers or problems with connection: " << ec.message() << std::endl;
 		return false;
 	}
-	//std::cout << "Successfully obtained a servers list from " << _url_give_servers << _get_command << std::endl;
+
+	tcp::resolver::iterator end;
+
+	ec=boost::asio::error::host_not_found;
+	while(ec&&it!=end)
+	{
+		_socket.connect(*it, ec);
+		*++it;
+	}
+
+	if (ec)
+	{
+		std::cerr << "Can't connect by http: " << ec.message() << std::endl;
+		return false;
+	}
+
 	return true;
 }

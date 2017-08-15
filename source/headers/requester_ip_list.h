@@ -24,7 +24,7 @@ private:
 	Json::Value _root;
 
 	//Fill in the lists of servers and ports from json file
-	bool listing_servers_and_ports(Json::Value::const_iterator const& branch, data_for_monitoring& data_for_monitoring_);
+	bool connect_http(const parsing_config& config);
 	bool send_http_request(const parsing_config& config);
 	bool receive_http_response(const parsing_config& config);
 	bool response_analysis(data_for_monitoring& data_for_monitoring_);

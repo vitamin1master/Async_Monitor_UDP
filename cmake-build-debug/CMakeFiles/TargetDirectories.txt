@@ -1,3 +1,0 @@
-/home/bso/monitor_prod/cmake-build-debug/CMakeFiles/edit_cache.dir
-/home/bso/monitor_prod/cmake-build-debug/CMakeFiles/rebuild_cache.dir
-/home/bso/monitor_prod/cmake-build-debug/CMakeFiles/monitor_prod.dir

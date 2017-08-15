@@ -84,6 +84,7 @@ void multitask_connection::send_binding_request(const std::shared_ptr<connection
 		connection->request_header.data_len = 0;
 		connection->request_header.magic_cookie = fixed_magic_cookie;
 
+        srand(time(0));
 		//2147483647 is int range
 		connection->request_header.id[0] = rand() % 2147483647;
 		connection->request_header.id[1] = rand() % 2147483647;

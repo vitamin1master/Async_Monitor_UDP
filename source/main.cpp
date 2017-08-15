@@ -14,6 +14,7 @@ int main(int argc, char* argv[])
 	parsing_config config;
 	if (!config.parse(config_path))
 	{
+		std::cerr<<"Can't parse"<<std::endl;
 		return 1;
 	}
 
@@ -21,6 +22,7 @@ int main(int argc, char* argv[])
 	data_for_monitoring data_for_monitoring_;
 	if (!requester.request(config, data_for_monitoring_))
 	{
+		std::cerr<<"Could't get list of servers"<<std::endl;
 		return 1;
 	}
 
