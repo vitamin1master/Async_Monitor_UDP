@@ -19,6 +19,4 @@ target_link_libraries(${PROJECT_NAME} ${Boost_PROGRAM_OPTIONS_LIBRARY} ${Boost_S
 set(LIB_INSTALL_PATH ${CMAKE_INSTALL_PREFIX}/lib/)
 
 install(TARGETS ${PROJECT_NAME} DESTINATION ${CMAKE_INSTALL_PREFIX}/bin)
-install(FILES ./etc/config.json DESTINATION ${CMAKE_INSTALL_PREFIX}/etc)
-install(FILES ./etc/result.json DESTINATION ${CMAKE_INSTALL_PREFIX}/output)
-install(FILES ./etc/Launch.sh DESTINATION ${CMAKE_INSTALL_PREFIX})
+install(FILES ./etc/config.default.json DESTINATION ${CMAKE_INSTALL_PREFIX}/etc)

@@ -10,7 +10,7 @@ bool parsing_config::parse(const std::string& config_path)
 	std::ifstream in(address_config_file);
 
 	if (!reader.parse(in, root)) {
-		std::cerr << "Can't parse configuration file. See READMY.md" << std::endl;
+		std::cerr << "Can't parse configuration file. See README.md" << std::endl;
 		return false;
 	}
 
@@ -75,7 +75,7 @@ bool parsing_config::check_values()
 
 		if (max_number_request_sent == 0)
 		{
-			std::cerr << "In the configuration file there is no definition of the max_number_request_sent or it's value is 0. See READMY.md"
+			std::cerr << "In the configuration file there is no definition of the max_number_request_sent or it's value is 0. See README.md"
 					  << std::endl;
 		}
 

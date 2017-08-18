@@ -1,0 +1,4 @@
+$ cat .gitignore
+cmake-build-debug/
+.*
+!.gitignore

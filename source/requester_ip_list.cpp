@@ -61,63 +61,70 @@ bool requester_ip_list::send_http_request(const parsing_config& config)
 	return true;
 }
 
-bool requester_ip_list::receive_http_response(const parsing_config& config)
-{
-	boost::system::error_code ec;
+bool requester_ip_list::receive_http_response(const parsing_config& config) {
+    boost::system::error_code ec;
 
-	boost::asio::read_until(_socket, _response, '\n', ec);
-	if (ec)
-	{
-		std::cerr << "Can't read response by http: " << ec.message() << std::endl;
-		return false;
-	}
+    boost::asio::read_until(_socket, _response, '\n', ec);
+    if (ec) {
+        std::cerr << "Can't read response by http: " << ec.message() << std::endl;
+        return false;
+    }
 
-	//Get data on response
-	std::iostream response_stream(&_response);
-	std::string http_version;
-	std::string status_message;
-	unsigned int status_code;
+    //Get data on response
+    std::iostream response_stream(&_response);
+    std::string http_version;
+    std::string status_message;
+    unsigned int status_code;
 
-	response_stream >> http_version;
-	response_stream >> status_code;
-	std::getline(response_stream, status_message);
+    response_stream >> http_version;
+    response_stream >> status_code;
+    std::getline(response_stream, status_message);
 
-	//Check the correctness of the response
-	if (!response_stream || http_version.find("HTTP")==std::string::npos)
-	{
-		std::cerr << "Invalid response" << std::endl;
-		return false;
-	}
+    //Check the correctness of the response
+    if (!response_stream || http_version.find("HTTP") == std::string::npos) {
+        std::cerr << "Invalid response" << std::endl;
+        return false;
+    }
 
-	boost::asio::read_until(_socket, _response, "\r\n\r\n", ec);
-	if (ec)
-	{
-		std::cerr << "Can't read response by http: " << ec.message() << std::endl;
-		return false;
-	}
-	std::string header;
+    boost::asio::read_until(_socket, _response, "\r\n\r\n", ec);
+    if (ec) {
+        std::cerr << "Can't read response by http: " << ec.message() << std::endl;
+        return false;
+    }
+    std::string header;
 
-	//Remove superfluous
-	while (std::getline(response_stream, header) && header != "\r")
-	{
-		
-	}
+    //Remove superfluous
+    while (std::getline(response_stream, header) && header != "\r") {
 
-	/*
-	std::ostringstream os;
-	os << &_response;
-	std::string str = os.str();
-	std::istringstream is(str);
-	is >> _root;*/
+    }
 
-	std::istringstream is("[\n"
-								  "        {\"ip\": \"74.125.143.127\", \"port\":19302},\n"
-								  "        {\"ip\": \"74.125.200.127\", \"port\":19302},\n"
-								  "        {\"ip\": \"64.233.188.127\", \"port\":19302},\n"
-								  "        {\"ip\": \"64.233.165.127\", \"port\":19302},\n"
-								  "        {\"ip\": \"64.233.161.127\", \"port\":19302}\n"
-								  "]");
-	is >> _root;
+    std::ostringstream os;
+    os << &_response;
+    std::string str = os.str();
+    std::istringstream is(str);
+    try
+    {
+
+        is >> _root;
+    }
+    catch (const Json::RuntimeError& er)
+    {
+        std::cerr << er.what()<<std::endl;
+        return false;
+    }
+    catch (const std::exception& ex)
+    {
+        return false;
+    }
+
+//	std::istringstream is("[\n"
+//								  "        {\"ip\": \"74.125.143.127\", \"port\":19302},\n"
+//								  "        {\"ip\": \"74.125.200.127\", \"port\":19302},\n"
+//								  "        {\"ip\": \"64.233.188.127\", \"port\":19302},\n"
+//								  "        {\"ip\": \"64.233.165.127\", \"port\":19302},\n"
+//								  "        {\"ip\": \"64.233.161.127\", \"port\":19302}\n"
+//								  "]");
+//	is >> _root;
 
 	return true;
 }

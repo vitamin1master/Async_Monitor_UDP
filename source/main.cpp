@@ -22,7 +22,7 @@ int main(int argc, char* argv[])
 	data_for_monitoring data_for_monitoring_;
 	if (!requester.request(config, data_for_monitoring_))
 	{
-		std::cerr<<"Could't get list of servers"<<std::endl;
+		std::cerr<<"Can't get list of servers"<<std::endl;
 		return 1;
 	}
 
