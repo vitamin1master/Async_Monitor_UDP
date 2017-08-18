@@ -6,6 +6,7 @@
 #define msg_type_binding_response htons(0x0101)
 #define fixed_magic_cookie htonl(0x2112A442)
 #define attr_type_xor_mappaddr htons(0x0020)
+#define attr_len_xor_mappaddr 8
 #define attr_family_ipv4 0x01
 #define attr_family_ipv6 0x02
 #define msg_hdr_length 20

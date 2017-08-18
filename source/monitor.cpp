@@ -1,6 +1,4 @@
 #include "headers/monitor.h"
-#include <boost/bind.hpp>
-#include <boost/function.hpp>
 #include <fstream>
 #include "headers/multitask_connection.h"
 #include <iostream>
@@ -20,13 +18,9 @@ bool monitor::start_monitoring(const data_for_monitoring& data_for_monitoring_)
 {
 	initialization_components(data_for_monitoring_);
 	
-	multitask_connection mult_con;
+	multitask_connection mult_con(this,data_for_monitoring_.period_sending_request_ms,data_for_monitoring_.max_number_request_sent);
 
-	boost::function<void(std::vector<connection_info> completed_connections_info_list)>
-		ver_res_monitoring_func(boost::bind(&monitor::verification_result_monitoring, this, _1));
-
-	if (mult_con.start_checking(data_for_monitoring_.servers_ports_list, ver_res_monitoring_func,
-		data_for_monitoring_.period_sending_request_ms, data_for_monitoring_.max_number_request_sent))
+	if (mult_con.start_checking(data_for_monitoring_.servers_ports_list))
 	{
 		return _successful_monitoring_indicator;
 	}

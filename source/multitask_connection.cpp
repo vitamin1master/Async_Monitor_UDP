@@ -2,7 +2,12 @@
 #include <iostream>
 
 //public:
-multitask_connection::multitask_connection() : _socket(_io_service, udp::v4()), _period_sending_request_ms(0), _max_number_request_sent(0)
+multitask_connection::multitask_connection(imonitor* monitor,
+										   int period_sending_request_ms,
+										   int max_number_request_sent) : _socket(_io_service, udp::v4()),
+																		  _max_number_request_sent(max_number_request_sent),
+																		  _period_sending_request_ms(period_sending_request_ms),
+																		  _monitor(monitor)
 {
 }
 
@@ -22,14 +27,8 @@ multitask_connection::~multitask_connection()
 	}
 }
 
-bool multitask_connection::start_checking(const std::vector<std::pair<std::string, int>>& servers_ports_list, const boost::function<void(const std::vector<connection_info> completed_connections_info_list)>& func, const int& period_sending_request_ms, const int& max_number_request_sent)
+bool multitask_connection::start_checking(const std::vector<std::pair<std::string, int>>& servers_ports_list)
 {
-	_period_sending_request_ms = period_sending_request_ms;
-	_max_number_request_sent = max_number_request_sent;
-
-	_all_connections_stopped_handle = func;
-	boost::function<void(const std::shared_ptr<const connection_test_packet>&)> connection_stop_handle(boost::bind(&multitask_connection::stop_connection, this, _1));
-	
 	boost::system::error_code ec;
 	if (!_socket.is_open())
 	{
@@ -46,7 +45,7 @@ bool multitask_connection::start_checking(const std::vector<std::pair<std::strin
 	{
 		//Create packet
 		connection_info info{ it.first,it.second, false, index };
-		auto packet = std::make_shared<connection_test_packet>(info, _io_service, connection_stop_handle);
+		auto packet = std::make_shared<connection_test_packet>(info, _io_service);
 
 		packet->timer.expires_from_now(boost::posix_time::milliseconds(interval*index));
 		packet->timer.async_wait(boost::bind(&multitask_connection::connect_handle, this, packet, _1));
@@ -84,11 +83,9 @@ void multitask_connection::send_binding_request(const std::shared_ptr<connection
 		connection->request_header.data_len = 0;
 		connection->request_header.magic_cookie = fixed_magic_cookie;
 
-        srand(time(0));
-		//2147483647 is int range
-		connection->request_header.id[0] = rand() % 2147483647;
-		connection->request_header.id[1] = rand() % 2147483647;
-		connection->request_header.id[2] = rand() % 2147483647;
+		connection->request_header.id[0] = _rand_dev();
+		connection->request_header.id[1] = _rand_dev();
+		connection->request_header.id[2] = _rand_dev();
 	}
 	
 	++connection->count_send_request;
@@ -124,14 +121,7 @@ void multitask_connection::wait_handle(const std::shared_ptr<connection_test_pac
 	else
 	{
 		connection->stop_indicator = true;
-		connection->connection_stop_handler(connection);
-		
-		boost::system::error_code ec;
-		connection->timer.cancel(ec);
-		if(ec)
-		{
-			std::cerr << ec.message() << std::endl;
-		}
+		stop_connection(connection);
 	}
 }
 
@@ -161,7 +151,7 @@ void multitask_connection::stop_connection(const std::shared_ptr<const connectio
 	if (!_connections_list.size())
 	{
 		_io_service.stop();
-		_all_connections_stopped_handle(_completed_connections_info_list);
+		_monitor->verification_result_monitoring(_completed_connections_info_list);
 	}
 }
 
@@ -189,17 +179,17 @@ void multitask_connection::read_handle(const std::shared_ptr<connection_test_pac
 	
 	uint16_t port = ntohs(response_struct.mappedaddr_attr.port);
 	port ^= 0x2112;
-	char* mapped_address = new char[20];
-	snprintf(mapped_address, 20, "%d.%d.%d.%d:%f", std::abs(response_struct.mappedaddr_attr.id[0] ^ 0x21), std::abs(response_struct.mappedaddr_attr.id[1] ^ 0x12),
-		std::abs(response_struct.mappedaddr_attr.id[2] ^ 0xA4), std::abs(response_struct.mappedaddr_attr.id[3] ^ 0x42), std::abs(port));
+    int p=std::abs(port);
+	const int max_len_addr=22;
+	char mapped_address[max_len_addr];
+
+	snprintf(mapped_address, max_len_addr, "%d.%d.%d.%d:%d", std::abs(response_struct.mappedaddr_attr.id[0] ^ 0x21), std::abs(response_struct.mappedaddr_attr.id[1] ^ 0x12),
+		std::abs(response_struct.mappedaddr_attr.id[2] ^ 0xA4), std::abs(response_struct.mappedaddr_attr.id[3] ^ 0x42), p);
 
 	std::string intermediateString(mapped_address);
 	it->get()->info.returned_ip_port = intermediateString;
 
 	server_is_active(*it);
-
-	delete[]mapped_address;
-	mapped_address = nullptr;
 }
 
 void multitask_connection::do_read(const std::shared_ptr<connection_test_packet>& connection)
@@ -214,13 +204,7 @@ void multitask_connection::do_read(const std::shared_ptr<connection_test_packet>
 		return;
 	}
 
-	if(connection->response_buf)
-	{
-		delete[]connection->response_buf;
-	}
-
-	connection->response_buf = new char[max_length_response];
-	_socket.async_receive_from(boost::asio::buffer(connection->response_buf, max_length_response), connection->remote_end_point,
+	_socket.async_receive_from(boost::asio::buffer(connection->response_buf, connection_test_packet::max_length_response), connection->remote_end_point,
 		boost::bind(&multitask_connection::read_handle, this, connection,_1, _2));
 	connection->read_indicator = true;
 }
@@ -236,7 +220,7 @@ void multitask_connection::server_is_active(const std::shared_ptr<connection_tes
 	connection->stop_indicator = true;
 	connection->info.stun_server_is_active = true;
 
-	connection->connection_stop_handler(connection);
+	stop_connection(connection);
 }
 
 bool multitask_connection::check_response(stun_response& response_struct, const std::shared_ptr<const connection_test_packet>& connection, const size_t& bytes) const
@@ -259,13 +243,15 @@ bool multitask_connection::check_response(stun_response& response_struct, const 
 	uint32_t response_data_len = ntohs(response_struct.data_len);
 	for (unsigned int i = 0; i < response_data_len&&i < bytes - msg_hdr_length; i += ntohs(response_struct.mappedaddr_attr.length))
 	{
-		if (i)
-		{
+		if (i) {
 			response_struct.mappedaddr_attr.type = 0;
 
-			char* point = nullptr;
-			point = connection->response_buf + msg_hdr_length + i;
-			memcpy(&response_struct.mappedaddr_attr, point, bytes - msg_hdr_length - i);
+			char cut_resp_buf[attr_len_xor_mappaddr];
+			for (int k = 0; k <attr_len_xor_mappaddr ; k++)
+			{
+				cut_resp_buf[k]=connection->response_buf[k+i+msg_hdr_length];
+			}
+			memcpy(&response_struct.mappedaddr_attr, cut_resp_buf, attr_len_xor_mappaddr);
 		}
 
 		if (response_struct.mappedaddr_attr.type == attr_type_xor_mappaddr)

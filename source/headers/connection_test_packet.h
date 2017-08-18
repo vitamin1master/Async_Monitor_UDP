@@ -7,11 +7,12 @@
 class connection_test_packet
 {
 public:
-	connection_test_packet(const connection_info& info_, boost::asio::io_service& service, const boost::function<void(const std::shared_ptr<const connection_test_packet>&)>& func);
+	connection_test_packet(const connection_info& info_, boost::asio::io_service& service);
 	~connection_test_packet();
 
 	static bool is_connect_sougth(const std::shared_ptr<const connection_test_packet>& connection, const boost::asio::ip::udp::endpoint& end_point);
 
+    static const int max_length_response = 128;
 	bool stop_indicator;
 	bool read_indicator;
 
@@ -21,10 +22,9 @@ public:
 
 	int count_send_request;
 	stun_request request_header;
-	char* response_buf;
+	char response_buf[max_length_response];
 
 	boost::asio::ip::udp::endpoint end_point;
 	boost::asio::ip::udp::endpoint remote_end_point;
-	boost::function<void(const std::shared_ptr<const connection_test_packet>&)> connection_stop_handler;
 };
 

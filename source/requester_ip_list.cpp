@@ -103,16 +103,21 @@ bool requester_ip_list::receive_http_response(const parsing_config& config)
 		
 	}
 
-	/*Json::Value root;
+	/*
 	std::ostringstream os;
 	os << &_response;
 	std::string str = os.str();
 	std::istringstream is(str);
-	is >> root;*/
+	is >> _root;*/
 
-	std::ifstream read_file("download_file.json");
-	Json::Reader reader;
-	reader.parse(read_file, _root);
+	std::istringstream is("[\n"
+								  "        {\"ip\": \"74.125.143.127\", \"port\":19302},\n"
+								  "        {\"ip\": \"74.125.200.127\", \"port\":19302},\n"
+								  "        {\"ip\": \"64.233.188.127\", \"port\":19302},\n"
+								  "        {\"ip\": \"64.233.165.127\", \"port\":19302},\n"
+								  "        {\"ip\": \"64.233.161.127\", \"port\":19302}\n"
+								  "]");
+	is >> _root;
 
 	return true;
 }
