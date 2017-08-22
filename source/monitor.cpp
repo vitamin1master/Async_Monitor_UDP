@@ -1,6 +1,7 @@
 #include "headers/monitor.h"
 #include <fstream>
 #include "headers/multitask_connection.h"
+#include "headers/json/json.h"
 #include <iostream>
 using boost::asio::ip::tcp;
 
@@ -14,9 +15,9 @@ monitor::~monitor()
 	_completed_connections_info_list.clear();
 }
 
-bool monitor::start_monitoring(const data_for_monitoring& data_for_monitoring_)
+bool monitor::start_monitoring(const data_for_monitoring& data_for_monitoring_, const std::string& record_path)
 {
-	initialization_components(data_for_monitoring_);
+	initialization_components(data_for_monitoring_,record_path);
 	
 	multitask_connection mult_con(this,data_for_monitoring_.period_sending_request_ms,data_for_monitoring_.max_number_request_sent);
 
@@ -28,9 +29,9 @@ bool monitor::start_monitoring(const data_for_monitoring& data_for_monitoring_)
 }
 
 //private:
-void monitor::initialization_components(const data_for_monitoring& data_for_monitoring_)
+void monitor::initialization_components(const data_for_monitoring& data_for_monitoring_,const std::string& record_path)
 {
-	_address_record_file = data_for_monitoring_.address_record_file;
+	_address_record_file=record_path;
 	_io_service->reset();
 	//_connections_list.clear();
 	_completed_connections_info_list.clear();
@@ -53,7 +54,7 @@ void monitor::verification_result_monitoring(const std::vector<connection_info>&
 	for (auto it : completed_connections_info_list)
 	{
 		Json::Value server;
-		server["ID"] = it.server_id;
+		server["IP"] = it.server_id;
 		if (it.stun_server_is_active)
 		{
 			server["IsActive"] = "Yes";

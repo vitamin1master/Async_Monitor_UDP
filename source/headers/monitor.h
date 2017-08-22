@@ -1,8 +1,8 @@
 #pragma once
 #include <boost/asio.hpp>
 #include "connection_info.h"
-#include "requester_ip_list.h"
 #include "imonitor.h"
+#include "data_for_monitoring.h"
 
 using boost::asio::ip::tcp;
 
@@ -12,11 +12,11 @@ public:
 	//Analysis of monitorin data
 	monitor();
 	~monitor();
-	bool start_monitoring(const data_for_monitoring& data_for_monitoring_);
+	bool start_monitoring(const data_for_monitoring& data_for_monitoring_, const std::string& record_path);
 	void verification_result_monitoring(const std::vector<connection_info>& completed_connections_info_list);
 
 private:
-	void initialization_components(const data_for_monitoring& data_for_monitoring_);
+	void initialization_components(const data_for_monitoring& data_for_monitoring_,const std::string& record_path);
 
 	std::shared_ptr<boost::asio::io_service> _io_service;
 	std::vector<connection_info> _completed_connections_info_list;

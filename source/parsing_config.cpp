@@ -15,7 +15,6 @@ bool parsing_config::parse(const std::string& config_path)
 	}
 
 	try {
-		address_record_file = root["capture_record_file"].asString();
 		url_give_servers = root["url_resource"].asString();
 		period_sending_request_ms = root["period_sending_request_ms"].asInt();
 		max_number_request_sent = root["max_number_request_sent"].asInt();
@@ -36,30 +35,13 @@ bool parsing_config::parse(const std::string& config_path)
 		return false;
 	}
 
-	//Select get_command
-	int position = url_give_servers.find('/');
-	if (position != std::string::npos)
-	{
-		get_command = url_give_servers.substr(position);
-		url_give_servers.erase(position);
-	}
-	else
-	{
-		get_command = "";
-	}
-
 	return true;
 }
 
 bool parsing_config::check_values()
 {
-	if (address_record_file == "" || url_give_servers == "" || period_sending_request_ms == 0 || max_number_request_sent == 0)
+	if (url_give_servers == "" || period_sending_request_ms == 0 || max_number_request_sent == 0)
 	{
-		if(address_record_file == "")
-		{
-			std::cerr << "In the configuration file there is no definition of the address_record_file or it's value is empty"
-					  << std::endl;
-		}
 
 		if (url_give_servers == "")
 		{
