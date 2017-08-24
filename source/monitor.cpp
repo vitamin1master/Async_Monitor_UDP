@@ -44,7 +44,7 @@ void monitor::verification_result_monitoring(const std::vector<connection_info>&
 	std::ofstream json_file(_address_record_file);
 	if(!json_file)
 	{
-		std::cerr << "The address of the record file is incorrect" << std::endl;
+		std::cerr << "void monitor::verification_result_monitoring(const std::vector<connection_info>&): The address of the record file is incorrect" << std::endl;
 		_successful_monitoring_indicator = false;
 		return;
 	}
@@ -55,6 +55,7 @@ void monitor::verification_result_monitoring(const std::vector<connection_info>&
 	{
 		Json::Value server;
 		server["IP"] = it.server_id;
+		server["Port"] = it.server_port;
 		if (it.stun_server_is_active)
 		{
 			server["IsActive"] = "Yes";

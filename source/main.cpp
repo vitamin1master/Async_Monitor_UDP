@@ -16,7 +16,7 @@ int main(int argc, char* argv[])
 	parsing_config config;
 	if (!config.parse(config_path))
 	{
-		std::cerr<<"Can't parse"<<std::endl;
+		std::cerr<<"Could not complete the parsing config file"<<std::endl;
 		return 1;
 	}
 
@@ -26,13 +26,14 @@ int main(int argc, char* argv[])
     requester requester;
     if(!requester.request(config,data_for_monitoring_))
     {
-        std::cerr<<"Can't get list of servers"<<std::endl;
+        std::cerr<<"Could not complete the requesting URL"<<std::endl;
         return 1;
     }
 
 	monitor monitor;
 	if (!monitor.start_monitoring(data_for_monitoring_,record_path))
 	{
+		std::cerr<<"Could not complete the monitoring"<<std::endl;
 		return 1;
 	}
 

@@ -21,20 +21,19 @@ bool po_parse(const int argc, char* argv[], std::string& config_path_, std::stri
 		if(vm.count("help"))
 		{
 			std::cout << general_options << std::endl;
-			std::cerr << "Entered the help option" << std::endl;
 			return false;
 		}
 
 		po::notify(vm);
 	}
-	catch(boost::program_options::error ec)
+	catch(const boost::program_options::error& ec)
 	{
-		std::cerr << "Can't parse command line: " << ec.what() << std::endl;
+		std::cerr << "bool po_parse(const int, char*, std::string&, std::string&): Could't parse command line: " << ec.what() << std::endl;
 		return false;
 	}
-	catch(std::exception ex)
+	catch(const std::exception& ex)
 	{
-		std::cerr << "Can't parse command line: " << ex.what() << std::endl;
+		std::cerr << "bool po_parse(const int, char*, std::string&, std::string&): Could't parse command line: " << ex.what() << std::endl;
 		return false;
 	}
 

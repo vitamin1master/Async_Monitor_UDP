@@ -1,0 +1,12 @@
+{
+	"script_name": "stun_monitor",
+	"result_old": "../result_old.json",
+	"result_new": "../result_new.json",
+	"error_log": "../error.log",
+	"config": "../etc/config.default.json",
+
+	"addressee": "example1@mail.com",
+	"destination": "example2@mail.com",
+	"smtp_source": "smtp.mail.com",
+	"password": "password_from_addressee_mail"
+}
