@@ -36,7 +36,7 @@ bool requester::get_page(const parsing_config &config)
 
         //Check the correctness of the response
         if (!is || http_version.find("HTTP") !=0) {
-            std::cerr << "bool requester::get_page(const parsing_config &config): Invalid response" << std::endl;
+            std::cerr << __PRETTY_FUNCTION__ << ":" <<  __LINE__ << ": Invalid response" << std::endl;
             return false;
         }
 
@@ -53,18 +53,18 @@ bool requester::get_page(const parsing_config &config)
         }
         catch (const Json::RuntimeError& er)
         {
-            std::cerr << "bool requester::get_page(const parsing_config &config):" << er.what()<<std::endl<<"Invalid download page"<<std::endl;
+            std::cerr << __PRETTY_FUNCTION__ << ":" <<  __LINE__ << ": Invalid download page"<<std::endl;
             return false;
         }
         catch (const std::exception& ex)
         {
-            std::cerr << "bool requester::get_page(const parsing_config &config):" << ex.what() << "Invalid download page" << std::endl;
+            std::cerr << __PRETTY_FUNCTION__ << ":" <<  __LINE__ << ": Invalid download page" << std::endl;
             return false;
         }
         return true;
     }
 
-    std::cerr<< "bool requester::get_page(const parsing_config &config): " << "Could't get page"<<std::endl;
+    std::cerr << __PRETTY_FUNCTION__ << ":" <<  __LINE__ << ": Could't get page"<<std::endl;
     return false;
 }
 
@@ -81,7 +81,7 @@ bool requester::request(const parsing_config &config, data_for_monitoring &data_
     }
     else
     {
-        std::cerr<<"bool requester::request(const parsing_config &config, data_for_monitoring &data_for_monitoring_): Could't open cURL"<<std::endl;
+        std::cerr << __PRETTY_FUNCTION__ << ":" <<  __LINE__ <<": Could't open cURL"<<std::endl;
         return false;
     }
 
@@ -95,7 +95,7 @@ bool requester::response_analysis(data_for_monitoring &data_for_monitoring_)
 {
     if(!_root.isArray())
     {
-        std::cerr<<"bool requester::response_analysis(data_for_monitoring &data_for_monitoring_): The downloaded file does not contain an array of servers"<<std::endl;
+        std::cerr<< __PRETTY_FUNCTION__ << ":" <<  __LINE__ << ": The downloaded file does not contain an array of servers"<<std::endl;
         return false;
     }
 
@@ -111,7 +111,7 @@ bool requester::response_analysis(data_for_monitoring &data_for_monitoring_)
         }
         catch(const Json::LogicError& er)
         {
-            std::cerr<<er.what()<<std::endl;
+            std::cerr << __PRETTY_FUNCTION__ << ":" <<  __LINE__ << ": " <<er.what()<<std::endl;
             return false;
         }
         catch(const std::exception& ex)

@@ -27,11 +27,6 @@ set(LIB_INSTALL_PATH ${CMAKE_INSTALL_PREFIX}/lib/)
 
 install(TARGETS ${PROJECT_NAME} DESTINATION ${CMAKE_INSTALL_PREFIX}/bin)
 
-install(FILES ./source/src_script/script.py DESTINATION ${CMAKE_INSTALL_PREFIX}/bin)
-install(FILES ./source/src_script/data_analysis.py DESTINATION ${CMAKE_INSTALL_PREFIX}/bin/src_script)
-install(FILES ./source/src_script/parse_command_line.py DESTINATION ${CMAKE_INSTALL_PREFIX}/bin/src_script)
-install(FILES ./source/src_script/parse_config.py DESTINATION ${CMAKE_INSTALL_PREFIX}/bin/src_script)
-install(FILES ./source/src_script/send_message.py DESTINATION ${CMAKE_INSTALL_PREFIX}/bin/src_script)
+install(FILES ./source/script.py DESTINATION ${CMAKE_INSTALL_PREFIX}/bin)
 
 install(FILES ./etc/config.default.json DESTINATION ${CMAKE_INSTALL_PREFIX}/etc)
-install(FILES ./etc/config_script.default.json DESTINATION ${CMAKE_INSTALL_PREFIX}/etc)

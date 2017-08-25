@@ -26,18 +26,13 @@ def parse_command_line():
 def send_message(message, from_address, to_address):
 	msg=initialization_message(message, from_address, to_address)
 
-	#hardcode
-	s = smtplib.SMTP('smtp.live.com')
-	s.ehlo()
-	s.starttls()
-	#hardcode
-	s.login(from_address, 'seriyboyko1')
+	s = smtplib.SMTP('localhost')
 	s.sendmail(from_address, [to_address], msg.as_string())
 	s.quit()
 
 def initialization_message(message, from_address, to_address):
 	msg=MIMEText(message,'plain','utf-8')
-	msg['Subject'] = 'Invalid servers'
+	msg['Subject'] = 'stun_monitor'
 	msg['From'] = from_address
 	msg['To'] = to_address
 
@@ -91,8 +86,8 @@ class data_analyzer:
 	def __end_of_analysis__(self):
 		if os.path.exists(self.__result_old):
 			os.remove(self.__result_old)
+		os.rename(result_new,result_old)
 
-	os.rename(result_new,result_old)
 	def __data_analysis__(self):
 		data_old = get_json(self.__result_old)
 		data_new = get_json(self.__result_new)

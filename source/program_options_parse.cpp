@@ -28,12 +28,12 @@ bool po_parse(const int argc, char* argv[], std::string& config_path_, std::stri
 	}
 	catch(const boost::program_options::error& ec)
 	{
-		std::cerr << "bool po_parse(const int, char*, std::string&, std::string&): Could't parse command line: " << ec.what() << std::endl;
+		std::cerr << __PRETTY_FUNCTION__ << ":" <<  __LINE__ << ": Could't parse command line: " << ec.what() << std::endl;
 		return false;
 	}
 	catch(const std::exception& ex)
 	{
-		std::cerr << "bool po_parse(const int, char*, std::string&, std::string&): Could't parse command line: " << ex.what() << std::endl;
+		std::cerr << __PRETTY_FUNCTION__ << ":" <<  __LINE__ << ": Could't parse command line: " << ex.what() << std::endl;
 		return false;
 	}
 

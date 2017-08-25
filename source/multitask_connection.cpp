@@ -22,7 +22,7 @@ multitask_connection::~multitask_connection()
 		_socket.close(ec);
 		if(ec)
 		{
-			std::cerr << "multitask_connection::~multitask_connection(): "<< ec.message() << std::endl;
+			std::cerr << __PRETTY_FUNCTION__ << ":" <<  __LINE__ << ": " << ec.message() << std::endl;
 		}
 	}
 }
@@ -35,7 +35,7 @@ bool multitask_connection::start_checking(const std::vector<std::pair<std::strin
 		_socket.open(udp::v4(), ec);
 		if (ec)
 		{
-			std::cerr << "bool multitask_connection::start_ckecking(const std::vector<std::pair<std::string, int>>&): " << ec.message() << std::endl;
+			std::cerr << __PRETTY_FUNCTION__ << __LINE__ << ": " << ec.message() << std::endl;
 			return false;
 		}
 	}
@@ -129,8 +129,7 @@ void multitask_connection::write_handle(const std::shared_ptr<connection_test_pa
 {
 	if(error)
 	{
-		std::cerr << "void multitask_connection::write_handle(const std::shared_ptr<connection_test_packet>&, const boost::system::error_code&, size_t): "
-				  << error.message() << std::endl;
+		std::cerr << __PRETTY_FUNCTION__ << ":" <<  __LINE__ << ": " << error.message() << std::endl;
 		return;
 	}
 	do_read(connection);
@@ -141,8 +140,7 @@ void multitask_connection::stop_connection(const std::shared_ptr<const connectio
 	auto iterator = std::find(_connections_list.begin(), _connections_list.end(), connection);
 	if (iterator == _connections_list.end())
 	{
-		std::cerr << "void multitask_connection::stop_connection(const std::shared_ptr<const connection_test_packet>&): " <<
-				  "No object found connection in vector connections_list" << std::endl;
+		std::cerr << __PRETTY_FUNCTION__ << ":" <<  __LINE__ << ": No object found connection in vector connections_list" << std::endl;
 		return;
 	}
 
@@ -162,8 +160,7 @@ void multitask_connection::read_handle(const std::shared_ptr<connection_test_pac
 	connection->read_indicator = false;
 	if(error)
 	{
-		std::cerr << "void multitask_connection::read_handle(const std::shared_ptr<connection_test_packet>&, const boost::system::error_code&, size_t): "
-				  << error.message() << std::endl;
+		std::cerr << __PRETTY_FUNCTION__ << ":" <<  __LINE__ << ": " << error.message() << std::endl;
 
 		return;
 	}
@@ -218,7 +215,7 @@ void multitask_connection::server_is_active(const std::shared_ptr<connection_tes
 	connection->timer.cancel(ec);
 	if(ec)
 	{
-		std::cerr << "void multitask_connection::server_is_active(const std::shared_ptr<connection_test_packet>&)" << ec.message() << std::endl;
+		std::cerr << __PRETTY_FUNCTION__ << ":" <<  __LINE__ << ": " << ec.message() << std::endl;
 	}
 	connection->stop_indicator = true;
 	connection->info.stun_server_is_active = true;
@@ -230,8 +227,7 @@ bool multitask_connection::check_response(stun_response& response_struct, const 
 {
 	if (response_struct.msg_type != msg_type_binding_response)
 	{
-		std::cerr << "bool multitask_connection::check_response(stun_response&, const std::shared_ptr<const connection_test_packet>&, const size_t&) const"
-				  << "The received response has a another type" << std::endl;
+		std::cerr << __PRETTY_FUNCTION__ << ":" <<  __LINE__<< ": The received response has a another type" << std::endl;
 		return false;
 	}
 
