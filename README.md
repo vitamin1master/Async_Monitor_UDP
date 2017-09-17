@@ -1,6 +1,8 @@
-# Async_Monitor_UDP
-The same project as AsyncMonitor_UDP. But on another comuter.
-The application reads all the necessary information from the config.json.
+# stun_monitor
+The application have three command-line parameters:
+-h --help
+-c --config_path
+-r --record_file
 The configuration file must contain 4 required fields:
 	"captureRecordFile" is the path to the file in which the result of the monitor's operation will be recorded (string);
 	"urlResource" is URL of the site from which the list of servers for monitoring will be received (string);
